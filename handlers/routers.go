@@ -17,7 +17,7 @@ func NewHandler(service *services.Service, logger logging.Logger) *Handler {
 
 func (h *Handler) InitRoutes() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/countries/:id", h.getOneCountry).Methods("GET")
+	r.HandleFunc("/countries/{id}", h.getOneCountry).Methods("GET")
 	r.HandleFunc("/countries", h.getAllCountries).Methods("GET")
 
 	return r

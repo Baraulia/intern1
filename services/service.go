@@ -6,7 +6,7 @@ var Countries [][]string
 
 type AppCountries interface {
 	GetOneCountry(id string) ([]string, error)
-	GetCountries(page int, limit int, chunk bool) ([][]string, int, error)
+	GetCountries(page int, limit int) ([][]string, int, error)
 }
 
 type Service struct {

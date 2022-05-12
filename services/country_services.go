@@ -21,10 +21,10 @@ func (c *CountryService) GetOneCountry(id string) ([]string, error) {
 	return []string{}, nil
 }
 
-func (c *CountryService) GetCountries(page int, limit int, chunk bool) ([][]string, int, error) {
-	if (page == 0 || limit == 0) && chunk == false {
+func (c *CountryService) GetCountries(page int, limit int) ([][]string, int, error) {
+	if page == 0 || limit == 0 {
 		return Countries, 1, nil
-	} else if chunk == false {
+	} else {
 		start := (page - 1) * limit
 		pages := (len(Countries) - 1) / limit
 		if (len(Countries)-1)%limit != 0 {
@@ -32,5 +32,4 @@ func (c *CountryService) GetCountries(page int, limit int, chunk bool) ([][]stri
 		}
 		return Countries[start : start+limit], pages, nil
 	}
-	return nil, 0, nil
 }
