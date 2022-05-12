@@ -1,6 +1,8 @@
 package services
 
-import "lesson_2/pkg/logging"
+import (
+	"lesson_2/pkg/logging"
+)
 
 type CountryService struct {
 	logger logging.Logger
@@ -21,10 +23,14 @@ func (c *CountryService) GetOneCountry(id string) ([]string, error) {
 
 func (c *CountryService) GetCountries(page int, limit int, chunk bool) ([][]string, int, error) {
 	if (page == 0 || limit == 0) && chunk == false {
-		return Countries, 0, nil
+		return Countries, 1, nil
 	} else if chunk == false {
-		start := 1 + ((page - 1) * limit)
-		return Countries[start : start+limit], 0, nil
+		start := (page - 1) * limit
+		pages := (len(Countries) - 1) / limit
+		if (len(Countries)-1)%limit != 0 {
+			pages++
+		}
+		return Countries[start : start+limit], pages, nil
 	}
 	return nil, 0, nil
 }

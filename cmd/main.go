@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	services.Countries = countries
+	services.Countries = countries[1:]
 
 	ser := services.NewService(logger)
 	handler := handlers.NewHandler(ser, logger)
@@ -31,6 +31,7 @@ func main() {
 	host := os.Getenv("API_SERVER_HOST")
 	serv := new(server.Server)
 
+	logger.Infof("Starting server on %s:%s...", host, port)
 	if err := serv.Run(host, port, handler.InitRoutes()); err != nil {
 		logger.Panicf("Error occured while running http server: %s", err.Error())
 	}
