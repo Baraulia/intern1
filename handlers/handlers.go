@@ -47,15 +47,9 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 
 	countries, pages, err := h.service.GetCountries(page, limit)
 	if err != nil {
-		if err.Error() == "limit out of range" {
-			h.logger.Warnf("limit out of range")
-			http.Error(w, "limit out of range", 404)
-			return
-		} else {
-			h.logger.Warnf("server error: %s", err)
-			http.Error(w, "server error", 500)
-			return
-		}
+		h.logger.Warnf("server error: %s", err)
+		http.Error(w, "server error", 500)
+		return
 	}
 
 	if chunk == false {

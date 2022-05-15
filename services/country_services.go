@@ -40,6 +40,8 @@ func (c *CountryService) GetOneCountry(id string) (*models.Country, error) {
 
 func (c *CountryService) GetCountries(page int, limit int) ([]models.Country, int, error) {
 	var countries []models.Country
+	var rangeCountry int
+	var start int
 	if page == 0 || limit == 0 {
 		for _, country := range c.countries {
 			var countryStruct models.Country
@@ -55,16 +57,18 @@ func (c *CountryService) GetCountries(page int, limit int) ([]models.Country, in
 		}
 		return countries, 1, nil
 	} else {
-		start := (page - 1) * limit
+		start = (page - 1) * limit
 		pages := (len(c.countries) - 1) / limit
 		if (len(c.countries)-1)%limit != 0 {
 			pages++
 		}
 		if page*limit > len(c.countries) {
-			return nil, 0, errors.New("limit out of range")
+			rangeCountry = len(c.countries)
+		} else {
+			rangeCountry = start + limit
 		}
 
-		for _, country := range c.countries[start : start+limit] {
+		for _, country := range c.countries[start:rangeCountry] {
 			var countryStruct models.Country
 			countryStruct.Name = country[0]
 			countryStruct.FullName = country[1]
