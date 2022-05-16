@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/joho/godotenv"
-	"lesson_2/handlers"
-	"lesson_2/pkg"
-	"lesson_2/pkg/logging"
-	"lesson_2/pkg/server"
-	"lesson_2/services"
 	"os"
+	"tranee_service/handlers"
+	"tranee_service/internal"
+	"tranee_service/internal/logging"
+	"tranee_service/internal/server"
+	"tranee_service/services"
 )
 
 func main() {
@@ -17,18 +17,30 @@ func main() {
 		logger.Fatalf("Error loading .env file. %s", err.Error())
 	}
 
+	separator, present := os.LookupEnv("CSV_SEPARATOR")
+	if !present {
+		separator = "\t"
+	}
+
 	path := os.Getenv("PATH_CSV_FILE")
-	countries, err := pkg.CsvHandler(path)
+	countries, err := internal.CsvHandler(path, separator)
 	if err != nil {
 		logger.Fatal(err)
 	}
-	services.Countries = countries[1:]
 
-	ser := services.NewService(logger)
+	ser := services.NewCountryService(countries, logger)
 	handler := handlers.NewHandler(ser, logger)
 
-	port := os.Getenv("API_SERVER_PORT")
-	host := os.Getenv("API_SERVER_HOST")
+	port, present := os.LookupEnv("API_SERVER_PORT")
+	if !present || port == "" {
+		port = "0.0.0.0"
+	}
+
+	host, present := os.LookupEnv("API_SERVER_HOST")
+	if !present || host == "" {
+		host = "8090"
+	}
+
 	serv := new(server.Server)
 
 	logger.Infof("Starting server on %s:%s...", host, port)

@@ -45,8 +45,9 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	countries, pages, err := h.service.AppCountries.GetCountries(page, limit)
+	countries, pages, err := h.service.GetCountries(page, limit)
 	if err != nil {
+		h.logger.Warnf("server error: %s", err)
 		http.Error(w, "server error", 500)
 		return
 	}
@@ -67,8 +68,12 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else {
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			h.logger.Errorf("getAllCountries: %s", err)
+		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Transfer-Encoding", "chunked")
+		w.Header().Set("Connection", "keep-alive")
 		for _, country := range countries {
 			output, err := json.Marshal(country)
 			if err != nil {
@@ -76,17 +81,9 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 				http.Error(w, fmt.Sprintf("getAllCountries: error while marshaling marshaling one country: %s", err), 500)
 				return
 			}
-			addBytes := []byte("\r\n")
+			addBytes := []byte("\n")
 			for _, b := range addBytes {
 				output = append(output, b)
-			}
-			w.Header().Set("Content-Length", strconv.Itoa(len(output))+"\r\n")
-			w.Header().Set("Transfer-Encoding", "chunked")
-			_, err = w.Write([]byte(strconv.Itoa(len(output)) + "\r\n"))
-			if err != nil {
-				h.logger.Errorf("getAllCountries: error while writing response:%s", err)
-				http.Error(w, fmt.Sprintf("getAllCountries: error while writing response:%s", err), 500)
-				return
 			}
 			_, err = w.Write(output)
 			if err != nil {
@@ -94,15 +91,23 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 				http.Error(w, fmt.Sprintf("getAllCountries: error while writing response:%s", err), 500)
 				return
 			}
+			flusher.Flush()
 		}
 	}
 }
 
 func (h *Handler) getOneCountry(w http.ResponseWriter, req *http.Request) {
 	countryId := strings.TrimPrefix(req.URL.Path, "/countries/")
+	countryId = strings.ToUpper(countryId)
 
-	country, err := h.service.AppCountries.GetOneCountry(countryId)
+	country, err := h.service.GetOneCountry(countryId)
 	if err != nil {
+		if err.Error() == "such a country does not exist" {
+			h.logger.Warnf("getOneCountry: such country does not exist")
+			http.Error(w, "such country does not exist", 404)
+			return
+		}
+		h.logger.Warnf("getOneCountry: server error: %s", err)
 		http.Error(w, "server error", 500)
 		return
 	}
