@@ -1,85 +1,72 @@
 package services
 
 import (
-	"errors"
-	"strconv"
+	"fmt"
 	"tranee_service/models"
+	"tranee_service/repositories"
 )
 
 type CountryService struct {
-	countries [][]string
-	logger    Logger
+	repository repositories.AppCountry
+	logger     models.Logger
 }
 
-func NewCountryService(counties [][]string, logger Logger) *CountryService {
-	return &CountryService{countries: counties, logger: logger}
+func NewCountryService(repository repositories.AppCountry, logger models.Logger) *CountryService {
+	return &CountryService{repository: repository, logger: logger}
 }
 
 func (c *CountryService) GetOneCountry(id string) (*models.Country, error) {
-	var responseCountry models.Country
-	exist := false
-	for _, country := range c.countries {
-		if country[3] == id || country[4] == id {
-			responseCountry.Name = country[0]
-			responseCountry.FullName = country[1]
-			responseCountry.EnglishName = country[2]
-			responseCountry.Alpha2 = country[3]
-			responseCountry.Alpha3 = country[4]
-			responseCountry.Iso, _ = strconv.Atoi(country[5])
-			responseCountry.Location = country[6]
-			responseCountry.LocationPrecise = country[7]
-			exist = true
-			return &responseCountry, nil
-		}
+	if err := c.repository.CheckCountryId(id); err != nil {
+		return nil, err
 	}
-	if exist == false {
-		return nil, errors.New("such a country does not exist")
-	}
-	return nil, nil
+	return c.repository.GetOneCountry(id)
 }
 
 func (c *CountryService) GetCountries(page int, limit int) ([]models.Country, int, error) {
-	var countries []models.Country
-	var rangeCountry int
-	var start int
 	if page == 0 || limit == 0 {
-		for _, country := range c.countries {
-			var countryStruct models.Country
-			countryStruct.Name = country[0]
-			countryStruct.FullName = country[1]
-			countryStruct.EnglishName = country[2]
-			countryStruct.Alpha2 = country[3]
-			countryStruct.Alpha3 = country[4]
-			countryStruct.Iso, _ = strconv.Atoi(country[5])
-			countryStruct.Location = country[6]
-			countryStruct.LocationPrecise = country[7]
-			countries = append(countries, countryStruct)
-		}
-		return countries, 1, nil
+		return c.repository.GetCountriesWithoutPagination()
 	} else {
-		start = (page - 1) * limit
-		pages := (len(c.countries) - 1) / limit
-		if (len(c.countries)-1)%limit != 0 {
-			pages++
-		}
-		if page*limit > len(c.countries) {
-			rangeCountry = len(c.countries)
-		} else {
-			rangeCountry = start + limit
-		}
-
-		for _, country := range c.countries[start:rangeCountry] {
-			var countryStruct models.Country
-			countryStruct.Name = country[0]
-			countryStruct.FullName = country[1]
-			countryStruct.EnglishName = country[2]
-			countryStruct.Alpha2 = country[3]
-			countryStruct.Alpha3 = country[4]
-			countryStruct.Iso, _ = strconv.Atoi(country[5])
-			countryStruct.Location = country[6]
-			countryStruct.LocationPrecise = country[7]
-			countries = append(countries, countryStruct)
-		}
-		return countries, pages, nil
+		return c.repository.GetCountries(page, limit)
 	}
 }
+
+func (c *CountryService) CreateCountry(country *models.ResponseCountry) (string, error) {
+	return c.repository.CreateCountry(country)
+}
+
+func (c *CountryService) ChangeCountry(country *models.ResponseCountry, countryId string) error {
+	if err := c.repository.CheckCountryId(countryId); err != nil {
+		return err
+	}
+	if len(countryId) == 2 {
+		country.Alpha2 = countryId
+	} else if len(countryId) == 3 {
+		country.Alpha3 = countryId
+	} else {
+		return fmt.Errorf("incorrect id")
+	}
+
+	return c.repository.ChangeCountry(country, countryId)
+}
+
+func (c *CountryService) DeleteCountry(countryId string) error {
+	if err := c.repository.CheckCountryId(countryId); err != nil {
+		return err
+	}
+	return c.repository.DeleteCountry(countryId)
+}
+
+//
+//func (c *CountryService) LoadImages() error {
+//	countries, _, err := c.repository.GetCountriesWithoutPagination()
+//	if err != nil {
+//		return err
+//	}
+//	var changedCountries []models.Country
+//	for _, country := range countries {
+//		go func(country *models.Country) {
+//
+//		}()
+//	}
+//	return c.repository.LoadImages()
+//}

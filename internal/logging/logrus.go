@@ -12,7 +12,7 @@ type Logger struct {
 	*logrus.Entry
 }
 
-func GetLogger() *Logger {
+func GetLoggerLogrus() *Logger {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{

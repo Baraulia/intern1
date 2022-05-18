@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+    mysql_database:
+        container_name: mysql_database
+        image: mysql:latest
+        env_file:
+            - .env
+        ports:
+            - "3310:3306"
+        restart: on-failure
+        networks:
+            new:
+
+    migrate:
+        image: migrate/migrate
+        restart: on-failure
+        volumes:
+            - ./migrations:/migrations
+
+        command:
+            [
+                "-path",
+                "./migrations",
+                "-database",
+                "mysql://intern_1:qwerty@tcp(mysql_database:3306)/hobby?multiStatements=true",
+                "up"
+            ]
+        links:
+            - mysql_database
+        depends_on:
+            - mysql_database
+        networks:
+            - new
+
+    go_app:
+        container_name: country_app
+        build:
+            dockerfile: Dockerfile
+            context: .
+        ports:
+            - "8090:8090"
+        env_file:
+            - .env
+        restart: always
+        depends_on:
+            - migrate
+        networks:
+            - new
+
+networks:
+    new:
+        driver: bridge

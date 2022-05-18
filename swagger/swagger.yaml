@@ -1,0 +1,194 @@
+openapi: 3.0.0
+info:
+  title: Countries API
+  description: This API can display a list of countries, add a new country, delete a country
+  version: '1.0'
+servers:
+  - url: http://127.0.0.1:8090/
+components:
+  schemas:
+    Country:
+      type: object
+      properties:
+        name:
+          type: string
+        full_name:
+          type: string
+        english_name:
+          type: string
+        alpha_2:
+          type: string
+        alpha_3:
+          type: string
+        iso:
+          type: integer
+        location:
+          type: string
+        location_precise:
+          type: string
+        url:
+          type: string
+    ResponseCountry:
+      type: object
+      properties:
+        name:
+          type: string
+        full_name:
+          type: string
+        english_name:
+          type: string
+        alpha_2:
+          type: string
+        alpha_3:
+          type: string
+        iso:
+          type: integer
+        location:
+          type: string
+        location_precise:
+          type: string
+        url:
+          type: string
+      required:
+        - name
+        - english_name
+        - alpha_2
+        - alpha_3
+        - iso
+    ListCountries:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Country'
+          type: array
+      type: object
+paths:
+  /countries:
+    get:
+      summary: Returns a list of countries
+      tags:
+        - Countries
+      parameters:
+        - description: Page
+          in: query
+          name: page
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - description: Limit
+          in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - description: Chunk
+          in: query
+          name: chunk
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: A JSON array of countries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListCountries'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Create new country
+      tags:
+        - Countries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResponseCountry'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad request
+        '500':
+          description: Server error
+  /countries/{id}:
+    get:
+      summary: Returns country by id
+      tags:
+        - Countries
+      parameters:
+        - description: Id
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: An object of country
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Country'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+    delete:
+      summary: Delete country by id
+      tags:
+        - Countries
+      parameters:
+        - description: Id
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+    put:
+      summary: Change one country
+      tags:
+        - Countries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResponseCountry'
+      parameters:
+        - description: Id
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Deleted
+        '400':
+          description: Bad request
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+
+
+

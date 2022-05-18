@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"tranee_service/models"
 )
 
 func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
@@ -125,3 +126,114 @@ func (h *Handler) getOneCountry(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 }
+
+func (h *Handler) createCountry(w http.ResponseWriter, req *http.Request) {
+	var input models.ResponseCountry
+	decoder := json.NewDecoder(req.Body)
+	if err := decoder.Decode(&input); err != nil {
+		h.logger.Errorf("Error while decoding request:%s", err)
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	validationErrors := validateStruct(input)
+	if len(validationErrors) != 0 {
+		h.logger.Warnf("Incorrect data came from the request:%s", validationErrors)
+		errors, err := json.Marshal(validationErrors)
+		if err != nil {
+			h.logger.Errorf("CreateCountry: error while marshaling list myErrors:%s", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, err = w.Write(errors)
+		if err != nil {
+			h.logger.Errorf("CreateCountry: can not write errors into response:%s", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+	countryId, err := h.service.CreateCountry(&input)
+	if err != nil {
+		if err != nil {
+			h.logger.Errorf(err.Error())
+			http.Error(w, err.Error(), 500)
+			return
+		}
+	}
+	w.Header().Set("id", countryId)
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *Handler) changeCountry(w http.ResponseWriter, req *http.Request) {
+	var input models.ResponseCountry
+	decoder := json.NewDecoder(req.Body)
+	if err := decoder.Decode(&input); err != nil {
+		h.logger.Errorf("Error while decoding request:%s", err)
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	validationErrors := validateStruct(input)
+	if len(validationErrors) != 0 {
+		h.logger.Warnf("Incorrect data came from the request:%s", validationErrors)
+		errors, err := json.Marshal(validationErrors)
+		if err != nil {
+			h.logger.Errorf("ChangeCountry: error while marshaling list myErrors:%s", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, err = w.Write(errors)
+		if err != nil {
+			h.logger.Errorf("ChangeCountry: can not write errors into response:%s", err)
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		return
+	}
+	countryId := strings.TrimPrefix(req.URL.Path, "/countries/")
+	countryId = strings.ToUpper(countryId)
+	err := h.service.ChangeCountry(&input, countryId)
+	if err != nil {
+		if err.Error() == "such a country does not exist" {
+			h.logger.Warnf("changeCountry: such country does not exist")
+			http.Error(w, "such country does not exist", 404)
+			return
+		}
+		h.logger.Errorf(err.Error())
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) deleteCountry(w http.ResponseWriter, req *http.Request) {
+	reqId := strings.TrimPrefix(req.URL.Path, "/countries/")
+	reqId = strings.ToUpper(reqId)
+	err := h.service.DeleteCountry(reqId)
+	if err != nil {
+		if err.Error() == "such a country does not exist" {
+			h.logger.Warnf("deleteCountry: such country does not exist")
+			http.Error(w, "such country does not exist", 404)
+			return
+		}
+		h.logger.Errorf(err.Error())
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+//
+//func (h *Handler) loadImages(w http.ResponseWriter, req *http.Request) {
+//
+//	err := h.service.LoadImages()
+//	if err != nil {
+//		h.logger.Errorf(err.Error())
+//		http.Error(w, err.Error(), 500)
+//		return
+//	}
+//	w.WriteHeader(http.StatusNoContent)
+//}

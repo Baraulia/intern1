@@ -4,10 +4,12 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"tranee_service/models"
 )
 
-func CsvHandler(filePath, separator string) ([][]string, error) {
+func GetCountriesInString(filePath, separator string) ([][]string, error) {
 	var responseCountries [][]string
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -26,4 +28,25 @@ func CsvHandler(filePath, separator string) ([][]string, error) {
 		responseCountries = append(responseCountries, responseCountry)
 	}
 	return responseCountries, nil
+}
+
+func CsvHandler(filePath, separator string) ([]models.Country, error) {
+	var countries []models.Country
+	stringCountries, err := GetCountriesInString(filePath, separator)
+	if err != nil {
+		return nil, err
+	}
+	for _, country := range stringCountries {
+		var countryStruct models.Country
+		countryStruct.Name = country[0]
+		countryStruct.FullName = country[1]
+		countryStruct.EnglishName = country[2]
+		countryStruct.Alpha2 = country[3]
+		countryStruct.Alpha3 = country[4]
+		countryStruct.Iso, _ = strconv.Atoi(country[5])
+		countryStruct.Location = country[6]
+		countryStruct.LocationPrecise = country[7]
+		countries = append(countries, countryStruct)
+	}
+	return countries, nil
 }

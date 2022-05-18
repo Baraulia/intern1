@@ -2,19 +2,21 @@ package main
 
 import (
 	"github.com/joho/godotenv"
+	"log"
 	"os"
 	"tranee_service/handlers"
 	"tranee_service/internal"
+	"tranee_service/internal/databases"
 	"tranee_service/internal/logging"
 	"tranee_service/internal/server"
+	"tranee_service/repositories"
 	"tranee_service/services"
 )
 
 func main() {
-	logger := logging.GetLogger()
 	err := godotenv.Load(".env")
 	if err != nil {
-		logger.Fatalf("Error loading .env file. %s", err.Error())
+		log.Fatalf("Error loading .env file. %s", err.Error())
 	}
 
 	separator, present := os.LookupEnv("CSV_SEPARATOR")
@@ -25,10 +27,27 @@ func main() {
 	path := os.Getenv("PATH_CSV_FILE")
 	countries, err := internal.CsvHandler(path, separator)
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	db, err := databases.NewMysqlDB(&databases.MysqlDB{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("MYSQL_PORT"),
+		Username: os.Getenv("MYSQL_USER"),
+		Password: os.Getenv("MYSQL_PASSWORD"),
+		DBName:   os.Getenv("MYSQL_DATABASE"),
+	})
+	if err != nil {
+		log.Panicf("Error while initialisation database:%s", err)
+	}
+	logger := logging.GetLoggerZap(db)
+	repo := repositories.NewCountryRepository(db, logger)
+	err = repo.SaveInitialCountries(countries)
+	if err != nil {
 		logger.Fatal(err)
 	}
 
-	ser := services.NewCountryService(countries, logger)
+	ser := services.NewCountryService(repo, logger)
 	handler := handlers.NewHandler(ser, logger)
 
 	port, present := os.LookupEnv("API_SERVER_PORT")
