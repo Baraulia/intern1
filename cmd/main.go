@@ -38,7 +38,7 @@ func main() {
 		DBName:   os.Getenv("MYSQL_DATABASE"),
 	})
 	if err != nil {
-		log.Panicf("Error while initialisation database:%s", err)
+		log.Panicf("Error while initialization database:%s", err)
 	}
 	logger := logging.GetLoggerZap(db)
 	repo := repositories.NewCountryRepository(db, logger)

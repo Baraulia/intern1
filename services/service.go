@@ -8,5 +8,5 @@ type AppCountries interface {
 	CreateCountry(country *models.ResponseCountry) (string, error)
 	ChangeCountry(country *models.ResponseCountry, countryId string) error
 	DeleteCountry(countryId string) error
-	//LoadImages() error
+	LoadImages()
 }

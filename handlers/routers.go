@@ -22,7 +22,7 @@ func (h *Handler) InitRoutes() *mux.Router {
 	r.HandleFunc("/countries", h.createCountry).Methods("POST")
 	r.HandleFunc("/countries/{id}", h.changeCountry).Methods("PUT")
 	r.HandleFunc("/countries/{id}", h.deleteCountry).Methods("DELETE")
-	//r.HandleFunc("/load-images", h.loadImages).Methods("GET")
+	r.HandleFunc("/load-images", h.loadImages).Methods("GET")
 
 	return r
 }

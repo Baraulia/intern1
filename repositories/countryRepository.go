@@ -93,6 +93,26 @@ func (c *CountryRepository) GetCountries(page int, limit int) ([]models.Country,
 	return countries, pages, nil
 }
 
+func (c *CountryRepository) GetCountriesWithoutFlag() ([]models.Country, error) {
+	var countries []models.Country
+	query := "SELECT name, full_name, english_name, alpha_2, alpha_3, iso, location, location_precise, url FROM countries WHERE url = '' ORDER BY english_name"
+	rows, err := c.db.Query(query)
+	if err != nil {
+		c.logger.Errorf("GetCountriesWithoutFlag: can not executes a query:%s", err)
+		return nil, fmt.Errorf("GetCountriesWithoutFlag: can not executes a query:%s", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var country models.Country
+		if err := rows.Scan(&country.Name, &country.FullName, &country.EnglishName, &country.Alpha2, &country.Alpha3, &country.Iso, &country.Location, &country.LocationPrecise, &country.Url); err != nil {
+			c.logger.Errorf("Error while scanning for country:%s", err)
+			return nil, fmt.Errorf("GetCountriesWithoutFlag:repository error:%w", err)
+		}
+		countries = append(countries, country)
+	}
+	return countries, nil
+}
+
 func (c *CountryRepository) GetCountriesWithoutPagination() ([]models.Country, int, error) {
 	var countries []models.Country
 	query := "SELECT name, full_name, english_name, alpha_2, alpha_3, iso, location, location_precise, url FROM countries ORDER BY alpha_2"
@@ -185,4 +205,33 @@ func (c *CountryRepository) CheckCountryId(countryId string) error {
 		return fmt.Errorf("such a country does not exist")
 	}
 	return nil
+}
+
+func (c *CountryRepository) LoadImages(countries []models.Country) error {
+	transaction, err := c.db.Begin()
+	if err != nil {
+		c.logger.Errorf("LoadImages: can not starts transaction:%s", err)
+		return fmt.Errorf("LoadImages: can not starts transaction:%w", err)
+	}
+	defer transaction.Rollback()
+	query := `UPDATE countries SET url = CASE english_name `
+	query2 := " "
+	var values []interface{}
+	var values2 []interface{}
+	for _, s := range countries {
+		values = append(values, s.EnglishName, s.Url)
+		query += `WHEN ? THEN ? `
+		query2 += `?,`
+		values2 = append(values2, s.EnglishName)
+	}
+	query += `ELSE url END ` + `WHERE english_name IN (` + query2[:len(query2)-1] + `)`
+	for _, value := range values2 {
+		values = append(values, value)
+	}
+	_, err = transaction.Exec(query, values...)
+	if err != nil {
+		c.logger.Errorf("LoadImages: error while insert flag url:%s", err)
+		return fmt.Errorf("LoadImages: error while insert flag url:%w", err)
+	}
+	return transaction.Commit()
 }

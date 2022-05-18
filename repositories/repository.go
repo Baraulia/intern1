@@ -11,5 +11,6 @@ type AppCountry interface {
 	ChangeCountry(country *models.ResponseCountry, countryId string) error
 	DeleteCountry(countryId string) error
 	CheckCountryId(countryId string) error
-	//LoadImages() error
+	GetCountriesWithoutFlag() ([]models.Country, error)
+	LoadImages(countries []models.Country) error
 }

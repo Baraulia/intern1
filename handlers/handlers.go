@@ -226,14 +226,7 @@ func (h *Handler) deleteCountry(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-//
-//func (h *Handler) loadImages(w http.ResponseWriter, req *http.Request) {
-//
-//	err := h.service.LoadImages()
-//	if err != nil {
-//		h.logger.Errorf(err.Error())
-//		http.Error(w, err.Error(), 500)
-//		return
-//	}
-//	w.WriteHeader(http.StatusNoContent)
-//}
+func (h *Handler) loadImages(w http.ResponseWriter, req *http.Request) {
+	go h.service.LoadImages()
+	go w.WriteHeader(http.StatusProcessing)
+}
