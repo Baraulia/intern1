@@ -8,11 +8,11 @@ import (
 	"runtime"
 )
 
-type Logger struct {
+type Logg struct {
 	*logrus.Entry
 }
 
-func GetLoggerLogrus() *Logger {
+func GetLoggerLogrus() *Logg {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{
@@ -34,5 +34,5 @@ func GetLoggerLogrus() *Logger {
 	l.SetOutput(allFile)
 	l.SetOutput(os.Stdout)
 	l.SetLevel(logrus.TraceLevel)
-	return &Logger{logrus.NewEntry(l)}
+	return &Logg{logrus.NewEntry(l)}
 }

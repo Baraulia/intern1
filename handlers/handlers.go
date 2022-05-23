@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/asaskevich/govalidator"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,8 +11,7 @@ import (
 )
 
 func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
-	var page = 0
-	var limit = 0
+	var filters models.Filters
 	var chunk = false
 
 	if req.URL.Query().Get("page") != "" {
@@ -21,7 +21,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
 			return
 		}
-		page = paramPage
+		filters.Page = uint64(paramPage)
 	}
 	if req.URL.Query().Get("limit") != "" {
 		paramLimit, err := strconv.Atoi(req.URL.Query().Get("limit"))
@@ -30,7 +30,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
 			return
 		}
-		limit = paramLimit
+		filters.Limit = uint64(paramLimit)
 	}
 	if req.URL.Query().Get("chunk") != "" {
 		paramChunk := req.URL.Query().Get("chunk")
@@ -46,7 +46,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	countries, pages, err := h.service.GetCountries(page, limit)
+	countries, pages, err := h.service.GetCountries(&filters)
 	if err != nil {
 		h.logger.Warnf("server error: %s", err)
 		http.Error(w, "server error", 500)
@@ -135,23 +135,10 @@ func (h *Handler) createCountry(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	validationErrors := validateStruct(input)
-	if len(validationErrors) != 0 {
-		h.logger.Warnf("Incorrect data came from the request:%s", validationErrors)
-		errors, err := json.Marshal(validationErrors)
-		if err != nil {
-			h.logger.Errorf("CreateCountry: error while marshaling list myErrors:%s", err)
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_, err = w.Write(errors)
-		if err != nil {
-			h.logger.Errorf("CreateCountry: can not write errors into response:%s", err)
-			http.Error(w, err.Error(), 500)
-			return
-		}
+	result, err := govalidator.ValidateStruct(input)
+	if !result {
+		h.logger.Errorf("Incorrect data came from the request:%s", err)
+		http.Error(w, err.Error(), 400)
 		return
 	}
 	countryId, err := h.service.CreateCountry(&input)
@@ -174,28 +161,15 @@ func (h *Handler) changeCountry(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	validationErrors := validateStruct(input)
-	if len(validationErrors) != 0 {
-		h.logger.Warnf("Incorrect data came from the request:%s", validationErrors)
-		errors, err := json.Marshal(validationErrors)
-		if err != nil {
-			h.logger.Errorf("ChangeCountry: error while marshaling list myErrors:%s", err)
-			http.Error(w, err.Error(), 500)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		_, err = w.Write(errors)
-		if err != nil {
-			h.logger.Errorf("ChangeCountry: can not write errors into response:%s", err)
-			http.Error(w, err.Error(), 500)
-			return
-		}
+	result, err := govalidator.ValidateStruct(input)
+	if !result {
+		h.logger.Errorf("Incorrect data came from the request:%s", err)
+		http.Error(w, err.Error(), 400)
 		return
 	}
 	countryId := strings.TrimPrefix(req.URL.Path, "/countries/")
 	countryId = strings.ToUpper(countryId)
-	err := h.service.ChangeCountry(&input, countryId)
+	err = h.service.ChangeCountry(&input, countryId)
 	if err != nil {
 		if err.Error() == "such a country does not exist" {
 			h.logger.Warnf("changeCountry: such country does not exist")
@@ -214,7 +188,7 @@ func (h *Handler) deleteCountry(w http.ResponseWriter, req *http.Request) {
 	reqId = strings.ToUpper(reqId)
 	err := h.service.DeleteCountry(reqId)
 	if err != nil {
-		if err.Error() == "such a country does not exist" {
+		if err.Error() == "country with such Id does not exist" {
 			h.logger.Warnf("deleteCountry: such country does not exist")
 			http.Error(w, "such country does not exist", 404)
 			return
@@ -228,5 +202,4 @@ func (h *Handler) deleteCountry(w http.ResponseWriter, req *http.Request) {
 
 func (h *Handler) loadImages(w http.ResponseWriter, req *http.Request) {
 	go h.service.LoadImages()
-	go w.WriteHeader(http.StatusProcessing)
 }

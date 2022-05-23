@@ -2,16 +2,16 @@ package handlers
 
 import (
 	"github.com/gorilla/mux"
-	"tranee_service/models"
+	"tranee_service/internal/logging"
 	"tranee_service/services"
 )
 
 type Handler struct {
 	service services.AppCountries
-	logger  models.Logger
+	logger  logging.Logger
 }
 
-func NewHandler(service services.AppCountries, logger models.Logger) *Handler {
+func NewHandler(service services.AppCountries, logger logging.Logger) *Handler {
 	return &Handler{service: service, logger: logger}
 }
 

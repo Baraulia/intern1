@@ -11,3 +11,4 @@ CREATE TABLE IF NOT EXISTS countries
 	location_precise varchar(150) not null,
 	url varchar(255) not null
 );
+

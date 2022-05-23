@@ -35,13 +35,3 @@ curl -X DELETE http://127.0.0.1:8090/countries/AH
 curl -X PUT -H "Content-Type: application/json" 
     -d '{"name": "ТестоваяСтрана","full_name": "Республика ТестоваяСтрана","english_name": "SdDDcEGDdaFREGfsvfDSF","alpha_2": "TT", "alpha_3": "TTT","iso": 1700,"location": "Азия","location_precise": "Закавказье"}' http://127.0.0.1:8090/countries/AH
 ```
-
-### How to do migrations:
-1. run command
-   `migrate -path ./migrations/ -database 'mysql://intern_1:qwerty@tcp(0.0.0.0:3310)/hobby?multiStatements=true' up`
-2. How to come migrations back
-   `migrate -path ./migrations/ -database 'mysql://intern_1:qwerty@tcp(0.0.0.0:3310)/hobby?multiStatements=true' down`
-3. How to fix database
-   `migrate -path ./migrations/ -database 'mysql://intern_1:qwerty@tcp(0.0.0.0:3310)/hobby?multiStatements=true' force 1`
-3. Delete all migrations
-   `migrate -path ./migrations/ -database 'mysql://intern_1:qwerty@tcp(0.0.0.0:3310)/hobby?multiStatements=true' drop` 
