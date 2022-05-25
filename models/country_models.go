@@ -47,10 +47,6 @@ type ResponseUser struct {
 	Hobbies     []string `json:"hobbies"`
 }
 
-type ListUsers struct {
-	Data []ResponseUser `json:"data"`
-}
-
 type Options struct {
 	Page  uint64
 	Limit uint64
