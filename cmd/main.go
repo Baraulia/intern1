@@ -4,6 +4,9 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 	"tranee_service/handlers"
 	"tranee_service/internal"
 	"tranee_service/internal/databases"
@@ -41,13 +44,13 @@ func main() {
 		log.Panicf("Error while initialization database:%s", err)
 	}
 	logger := logging.GetLoggerZap(db)
-	repo := repositories.NewCountryRepository(db, logger)
+	repo := repositories.NewRepository(db, logger)
 	err = repo.SaveInitialCountries(countries)
 	if err != nil {
 		logger.Fatal(err)
 	}
 
-	ser := services.NewCountryService(repo, logger)
+	ser := services.NewService(repo, logger)
 	handler := handlers.NewHandler(ser, logger)
 
 	port, present := os.LookupEnv("API_SERVER_PORT")
@@ -61,10 +64,24 @@ func main() {
 	}
 
 	serv := new(server.Server)
-
 	logger.Infof("Starting server on %s:%s...", host, port)
-	if err := serv.Run(host, port, handler.InitRoutes()); err != nil {
-		logger.Panicf("Error occured while running http server: %s", err.Error())
-	}
+	go func() {
+		if err := serv.Run(host, port, handler.InitRoutes()); err != nil {
+			logger.Panicf("Error occured while running http server: %s", err.Error())
+		}
+	}()
 
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	ticker := time.NewTicker(1 * time.Hour)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				ser.AppCountries.LoadImages()
+			}
+		}
+	}()
+	<-quit
+	ticker.Stop()
 }

@@ -143,11 +143,9 @@ func (h *Handler) createCountry(w http.ResponseWriter, req *http.Request) {
 	}
 	countryId, err := h.service.CreateCountry(&input)
 	if err != nil {
-		if err != nil {
-			h.logger.Errorf(err.Error())
-			http.Error(w, err.Error(), 500)
-			return
-		}
+		h.logger.Errorf(err.Error())
+		http.Error(w, err.Error(), 500)
+		return
 	}
 	w.Header().Set("id", countryId)
 	w.WriteHeader(http.StatusCreated)

@@ -126,7 +126,7 @@ func (c *CountryRepository) CreateCountry(country *models.ResponseCountry) (stri
 }
 
 func (c *CountryRepository) ChangeCountry(country *models.ResponseCountry, countryId string) error {
-	query := "UPDATE countries SET name = ?, full_name = ?, english_name = ?, alpha_2 = ?, alpha_3 = ?, iso = ?, location = ?, location_precise = ?, url = ? WHERE alpha_2 = ? OR alpha_3 = ?"
+	query := "UPDATE IGNORE countries SET name = ?, full_name = ?, english_name = ?, alpha_2 = ?, alpha_3 = ?, iso = ?, location = ?, location_precise = ?, url = ? WHERE alpha_2 = ? OR alpha_3 = ?"
 	_, err := c.db.Exec(query, country.Name, country.FullName, country.EnglishName, country.Alpha2, country.Alpha3, country.Iso, country.Location, country.LocationPrecise, country.Url, countryId, countryId)
 	if err != nil {
 		c.logger.Errorf("ChangeCountry: error while updating country:%s", err)

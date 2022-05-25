@@ -29,3 +29,29 @@ type Filters struct {
 	Limit uint64
 	Flag  bool
 }
+
+type User struct {
+	Name        string   `json:"name" valid:"alpha"`
+	Email       string   `json:"email" valid:"email"`
+	Description string   `json:"description"`
+	CountryId   int      `json:"country_id"`
+	Hobbies     []string `json:"hobbies"`
+}
+
+type ResponseUser struct {
+	Id          int      `json:"id"`
+	Name        string   `json:"name"`
+	Email       string   `json:"email"`
+	Description string   `json:"description"`
+	CountryId   int      `json:"country_id"`
+	Hobbies     []string `json:"hobbies"`
+}
+
+type ListUsers struct {
+	Data []ResponseUser `json:"data"`
+}
+
+type Options struct {
+	Page  uint64
+	Limit uint64
+}

@@ -11,11 +11,11 @@ import (
 )
 
 type CountryService struct {
-	repository repositories.AppCountry
+	repository *repositories.Repository
 	logger     logging.Logger
 }
 
-func NewCountryService(repository repositories.AppCountry, logger logging.Logger) *CountryService {
+func NewCountryService(repository *repositories.Repository, logger logging.Logger) *CountryService {
 	return &CountryService{repository: repository, logger: logger}
 }
 

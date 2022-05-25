@@ -1,2 +1,7 @@
-DROP TABLE IF EXISTS countries;
+DROP TABLE IF EXISTS users_hobbies;
 
+DROP TABLE IF EXISTS hobbies;
+
+DROP TABLE IF EXISTS users;
+
+DROP TABLE IF EXISTS countries;

@@ -7,11 +7,11 @@ import (
 )
 
 type Handler struct {
-	service services.AppCountries
+	service *services.Service
 	logger  logging.Logger
 }
 
-func NewHandler(service services.AppCountries, logger logging.Logger) *Handler {
+func NewHandler(service *services.Service, logger logging.Logger) *Handler {
 	return &Handler{service: service, logger: logger}
 }
 
@@ -23,6 +23,12 @@ func (h *Handler) InitRoutes() *mux.Router {
 	r.HandleFunc("/countries/{id}", h.changeCountry).Methods("PUT")
 	r.HandleFunc("/countries/{id}", h.deleteCountry).Methods("DELETE")
 	r.HandleFunc("/load-images", h.loadImages).Methods("GET")
+
+	r.HandleFunc("/users", h.createUser).Methods("POST")
+	r.HandleFunc("/users", h.getUsers).Methods("GET")
+	r.HandleFunc("/users/{id}", h.getUserById).Methods("GET")
+	r.HandleFunc("/users/{id}", h.changeUser).Methods("PUT")
+	r.HandleFunc("/users/{id}", h.deleteUser).Methods("DELETE")
 
 	return r
 }
