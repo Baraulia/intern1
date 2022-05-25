@@ -40,7 +40,7 @@ func (h *Handler) getUsers(w http.ResponseWriter, req *http.Request) {
 		paramPage, err := strconv.Atoi(req.URL.Query().Get("page"))
 		if err != nil || paramPage < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
+			http.Error(w, "Invalid url request", 400)
 			return
 		}
 		options.Page = uint64(paramPage)
@@ -49,7 +49,7 @@ func (h *Handler) getUsers(w http.ResponseWriter, req *http.Request) {
 		paramLimit, err := strconv.Atoi(req.URL.Query().Get("limit"))
 		if err != nil || paramLimit < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
+			http.Error(w, "Invalid url request", 400)
 			return
 		}
 		options.Limit = uint64(paramLimit)
@@ -81,7 +81,7 @@ func (h *Handler) getUserById(w http.ResponseWriter, req *http.Request) {
 	userId, err := strconv.Atoi(paramId)
 	if err != nil || userId <= 0 {
 		h.logger.Warnf("Invalid request:%s", err)
-		http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
+		http.Error(w, "Invalid url request", 400)
 		return
 	}
 	user, err := h.service.AppUsers.GetUserById(userId)

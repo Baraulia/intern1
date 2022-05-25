@@ -18,7 +18,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 		paramPage, err := strconv.Atoi(req.URL.Query().Get("page"))
 		if err != nil || paramPage < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
+			http.Error(w, "Invalid url request", 400)
 			return
 		}
 		filters.Page = uint64(paramPage)
@@ -27,7 +27,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 		paramLimit, err := strconv.Atoi(req.URL.Query().Get("limit"))
 		if err != nil || paramLimit < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
+			http.Error(w, "Invalid url request", 400)
 			return
 		}
 		filters.Limit = uint64(paramLimit)
@@ -99,8 +99,12 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 
 func (h *Handler) getOneCountry(w http.ResponseWriter, req *http.Request) {
 	countryId := strings.TrimPrefix(req.URL.Path, "/countries/")
+	if !govalidator.IsAlpha(countryId) {
+		h.logger.Warnf("Invalid url parameter")
+		http.Error(w, "Invalid url parameter", 400)
+		return
+	}
 	countryId = strings.ToUpper(countryId)
-
 	country, err := h.service.GetOneCountry(countryId)
 	if err != nil {
 		if err.Error() == "such a country does not exist" {
@@ -166,6 +170,11 @@ func (h *Handler) changeCountry(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	countryId := strings.TrimPrefix(req.URL.Path, "/countries/")
+	if !govalidator.IsAlpha(countryId) {
+		h.logger.Warnf("Invalid url parameter")
+		http.Error(w, "Invalid url parameter", 400)
+		return
+	}
 	countryId = strings.ToUpper(countryId)
 	err = h.service.ChangeCountry(&input, countryId)
 	if err != nil {
@@ -183,6 +192,11 @@ func (h *Handler) changeCountry(w http.ResponseWriter, req *http.Request) {
 
 func (h *Handler) deleteCountry(w http.ResponseWriter, req *http.Request) {
 	reqId := strings.TrimPrefix(req.URL.Path, "/countries/")
+	if !govalidator.IsAlpha(reqId) {
+		h.logger.Warnf("Invalid url parameter")
+		http.Error(w, "Invalid url parameter", 400)
+		return
+	}
 	reqId = strings.ToUpper(reqId)
 	err := h.service.DeleteCountry(reqId)
 	if err != nil {

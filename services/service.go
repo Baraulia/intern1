@@ -6,6 +6,8 @@ import (
 	"tranee_service/repositories"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/service_mock.go
+
 type AppCountries interface {
 	GetOneCountry(id string) (*models.Country, error)
 	GetCountries(filters *models.Filters) ([]models.Country, int, error)
