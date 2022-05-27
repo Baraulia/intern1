@@ -65,9 +65,14 @@ func main() {
 
 	serv := new(server.Server)
 	logger.Infof("Starting server on %s:%s...", host, port)
+	done := make(chan bool, 1)
 	go func() {
 		if err := serv.Run(host, port, handler.InitRoutes()); err != nil {
 			logger.Panicf("Error occured while running http server: %s", err.Error())
+			select {
+			case <-done:
+				return
+			}
 		}
 	}()
 
@@ -84,4 +89,5 @@ func main() {
 	}()
 	<-quit
 	ticker.Stop()
+	done <- true
 }

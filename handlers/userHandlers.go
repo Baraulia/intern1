@@ -166,3 +166,38 @@ func (h *Handler) deleteUser(w http.ResponseWriter, req *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+func (h *Handler) getHobbyByUserId(w http.ResponseWriter, req *http.Request) {
+	paramId := strings.TrimPrefix(req.URL.Path, "/users/")
+	paramId = strings.TrimSuffix(paramId, "/hobbies")
+	userId, err := strconv.Atoi(paramId)
+	if err != nil || userId <= 0 {
+		h.logger.Warnf("Invalid request:%s", err)
+		http.Error(w, "Invalid url request", 400)
+		return
+	}
+	hobbiesId, err := h.service.AppUsers.GetHobbyByUserId(userId)
+	if err != nil {
+		if err.Error() == "user with such Id does not exist" {
+			h.logger.Warnf("getHobbyByUserId: such user does not exist")
+			http.Error(w, "such user does not exist", 404)
+			return
+		}
+		h.logger.Errorf(err.Error())
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	output, err := json.Marshal(hobbiesId)
+	if err != nil {
+		h.logger.Errorf("getHobbyByUserId: error while marshaling list id of hobbies: %s", err)
+		http.Error(w, fmt.Sprintf("getHobbyByUserId: error while marshaling list id of hobbies: %s", err), 500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(output)
+	if err != nil {
+		h.logger.Errorf("getHobbyByUserId: error while writing response:%s", err)
+		http.Error(w, fmt.Sprintf("getHobbyByUserId: error while writing response:%s", err), 500)
+		return
+	}
+}

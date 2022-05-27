@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Masterminds/squirrel"
+	"strconv"
 	"strings"
 	"tranee_service/internal/logging"
 	"tranee_service/models"
@@ -27,20 +28,7 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 	}
 	defer transaction.Rollback()
 
-	var hobbies []interface{}
-	query := "INSERT IGNORE INTO hobbies (name) values "
-	for i := 0; i < len(user.Hobbies); i++ {
-		hobbies = append(hobbies, user.Hobbies[i])
-		query += "(?),"
-	}
-	query = query[:len(query)-1]
-	_, err = transaction.Exec(query, hobbies...)
-	if err != nil {
-		u.logger.Errorf("CreateUser: error while insert hobbies:%s", err)
-		return 0, fmt.Errorf("CreateUser: error while insert hobbies:%w", err)
-	}
-
-	query = "INSERT INTO users (name, email, description, country_id) values (?, ?, ?, ?)"
+	query := "INSERT INTO users (name, email, description, country_id) values (?, ?, ?, ?)"
 	result, err := transaction.Exec(query, user.Name, user.Email, user.Description, user.CountryId)
 	if err != nil {
 		u.logger.Errorf("CreateUser: error while insert user:%s", err)
@@ -52,33 +40,9 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 		return 0, fmt.Errorf("CreateUser: error while getting insertId:%w", err)
 	}
 	userId = int(id)
-	var hobbiesName []interface{}
-	var hobbiesId []int
-	query = "SELECT id FROM hobbies WHERE name IN ("
-	for _, h := range user.Hobbies {
-		query += `?,`
-		hobbiesName = append(hobbiesName, h)
-	}
-	query = query[:len(query)-1]
-	query += `)`
-	rows, err := transaction.Query(query, hobbiesName...)
-	if err != nil {
-		u.logger.Errorf("CreateUser: error while getting hobbies id:%s", err)
-		return 0, fmt.Errorf("CreateUser: error while getting hobbies id:%w", err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id int
-		if err := rows.Scan(&id); err != nil {
-			u.logger.Errorf("Error while scanning for hobby id:%s", err)
-			return 0, fmt.Errorf("CreateUser:repository error:%w", err)
-		}
-		hobbiesId = append(hobbiesId, id)
-	}
-
 	query = "INSERT INTO users_hobbies (user_id, hobby_id) values "
 	var values []interface{}
-	for _, s := range hobbiesId {
+	for _, s := range user.Hobbies {
 		values = append(values, userId, s)
 		query += `(?,?),`
 	}
@@ -93,9 +57,8 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 
 func (u *UserRepository) GetUserById(userId int) (*models.ResponseUser, error) {
 	var user models.ResponseUser
-	s := squirrel.Select("users.id, users.name, users.email, users.description, users.country_id, GROUP_CONCAT(hobbies.name) AS list").From("users").
-		Join("users_hobbies on users.id = users_hobbies.user_id").LeftJoin("hobbies ON users_hobbies.hobby_id = hobbies.id").GroupBy("users.id").
-		Where("users.id = ?", userId)
+	s := squirrel.Select("users.id, users.name, users.email, users.description, users.country_id, GROUP_CONCAT(users_hobbies.hobby_id) AS list").From("users").
+		Join("users_hobbies on users.id = users_hobbies.user_id").GroupBy("users.id").Where("users.id = ?", userId)
 	query, args, err := s.ToSql()
 	if err != nil {
 		u.logger.Errorf("GetUserById: can not builds the query into a SQL:%s", err)
@@ -108,7 +71,15 @@ func (u *UserRepository) GetUserById(userId int) (*models.ResponseUser, error) {
 		return nil, fmt.Errorf("GetUserById: repository error:%w", err)
 	}
 	strHobby := string(bytesHobby[:])
-	user.Hobbies = strings.Split(strHobby, ",")
+	sliceHobby := strings.Split(strHobby, ",")
+	for _, n := range sliceHobby {
+		number, err := strconv.Atoi(n)
+		if err != nil {
+			u.logger.Errorf("Error while converting hobby`s id:%s", err)
+			return nil, fmt.Errorf("GetUserById: Error while converting hobby`s id:%w", err)
+		}
+		user.Hobbies = append(user.Hobbies, number)
+	}
 	return &user, nil
 }
 
@@ -116,8 +87,8 @@ func (u *UserRepository) GetUsers(filter *models.Options) ([]models.ResponseUser
 	var users []models.ResponseUser
 	var sel squirrel.SelectBuilder
 	var pages int
-	s := squirrel.Select("users.id, users.name, users.email, users.description, users.country_id, GROUP_CONCAT(hobbies.name) AS list").From("users").
-		Join("users_hobbies on users.id = users_hobbies.user_id").LeftJoin("hobbies ON users_hobbies.hobby_id = hobbies.id").GroupBy("users.id")
+	s := squirrel.Select("users.id, users.name, users.email, users.description, users.country_id, GROUP_CONCAT(users_hobbies.hobby_id) AS list").From("users").
+		Join("users_hobbies on users.id = users_hobbies.user_id").GroupBy("users.id")
 	if filter.Page != 0 && filter.Limit != 0 {
 		sel = s.Limit(filter.Limit).Offset((filter.Page - 1) * filter.Limit).OrderBy("users.id")
 	} else {
@@ -143,7 +114,15 @@ func (u *UserRepository) GetUsers(filter *models.Options) ([]models.ResponseUser
 			return nil, 0, fmt.Errorf("GetUsers:repository error:%w", err)
 		}
 		strHobby := string(bytesHobby[:])
-		user.Hobbies = strings.Split(strHobby, ",")
+		sliceHobby := strings.Split(strHobby, ",")
+		for _, n := range sliceHobby {
+			number, err := strconv.Atoi(n)
+			if err != nil {
+				u.logger.Errorf("Error while converting hobby`s id:%s", err)
+				return nil, 0, fmt.Errorf("GetUsers: Error while converting hobby`s id:%w", err)
+			}
+			user.Hobbies = append(user.Hobbies, number)
+		}
 		users = append(users, user)
 	}
 
@@ -166,20 +145,7 @@ func (u *UserRepository) ChangeUser(user *models.User, userId int) error {
 	}
 	defer transaction.Rollback()
 
-	var hobbies []interface{}
-	query := "INSERT IGNORE INTO hobbies (name) values "
-	for i := 0; i < len(user.Hobbies); i++ {
-		hobbies = append(hobbies, user.Hobbies[i])
-		query += "(?),"
-	}
-	query = query[:len(query)-1]
-	_, err = transaction.Exec(query, hobbies...)
-	if err != nil {
-		u.logger.Errorf("ChangeUser: error while insert hobbies:%s", err)
-		return fmt.Errorf("ChangeUser: error while insert hobbies:%w", err)
-	}
-
-	query = "UPDATE users SET name = ?, email = ?, description = ?, country_id = ? WHERE id = ?"
+	query := "UPDATE users SET name = ?, email = ?, description = ?, country_id = ? WHERE id = ?"
 	result, err := transaction.Exec(query, user.Name, user.Email, user.Description, user.CountryId, userId)
 	if err != nil {
 		u.logger.Errorf("ChangeUser: error while updating user:%s", err)
@@ -202,33 +168,9 @@ func (u *UserRepository) ChangeUser(user *models.User, userId int) error {
 		return fmt.Errorf("ChangeUser: error whiledeleting bound relations:%w", err)
 	}
 
-	var hobbiesName []interface{}
-	var hobbiesId []int
-	query = "SELECT id FROM hobbies WHERE name IN ("
-	for _, h := range user.Hobbies {
-		query += `?,`
-		hobbiesName = append(hobbiesName, h)
-	}
-	query = query[:len(query)-1]
-	query += `)`
-	rows, err := transaction.Query(query, hobbiesName...)
-	if err != nil {
-		u.logger.Errorf("ChangeUser: error while getting hobbies id:%s", err)
-		return fmt.Errorf("ChangeUser: error while getting hobbies id:%w", err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var id int
-		if err := rows.Scan(&id); err != nil {
-			u.logger.Errorf("Error while scanning for hobby id:%s", err)
-			return fmt.Errorf("ChangeUser:repository error:%w", err)
-		}
-		hobbiesId = append(hobbiesId, id)
-	}
-
 	query = "INSERT INTO users_hobbies (user_id, hobby_id) values "
 	var values []interface{}
-	for _, s := range hobbiesId {
+	for _, s := range user.Hobbies {
 		values = append(values, userId, s)
 		query += `(?,?),`
 	}

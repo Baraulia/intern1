@@ -186,6 +186,21 @@ func (mr *MockAppUsersMockRecorder) DeleteUser(userId interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockAppUsers)(nil).DeleteUser), userId)
 }
 
+// GetHobbyByUserId mocks base method.
+func (m *MockAppUsers) GetHobbyByUserId(userId int) ([]int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHobbyByUserId", userId)
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHobbyByUserId indicates an expected call of GetHobbyByUserId.
+func (mr *MockAppUsersMockRecorder) GetHobbyByUserId(userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHobbyByUserId", reflect.TypeOf((*MockAppUsers)(nil).GetHobbyByUserId), userId)
+}
+
 // GetUserById mocks base method.
 func (m *MockAppUsers) GetUserById(userId int) (*models.ResponseUser, error) {
 	m.ctrl.T.Helper()
@@ -215,4 +230,57 @@ func (m *MockAppUsers) GetUsers(filter *models.Options) ([]models.ResponseUser, 
 func (mr *MockAppUsersMockRecorder) GetUsers(filter interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUsers", reflect.TypeOf((*MockAppUsers)(nil).GetUsers), filter)
+}
+
+// MockAppHobbies is a mock of AppHobbies interface.
+type MockAppHobbies struct {
+	ctrl     *gomock.Controller
+	recorder *MockAppHobbiesMockRecorder
+}
+
+// MockAppHobbiesMockRecorder is the mock recorder for MockAppHobbies.
+type MockAppHobbiesMockRecorder struct {
+	mock *MockAppHobbies
+}
+
+// NewMockAppHobbies creates a new mock instance.
+func NewMockAppHobbies(ctrl *gomock.Controller) *MockAppHobbies {
+	mock := &MockAppHobbies{ctrl: ctrl}
+	mock.recorder = &MockAppHobbiesMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAppHobbies) EXPECT() *MockAppHobbiesMockRecorder {
+	return m.recorder
+}
+
+// CreateHobby mocks base method.
+func (m *MockAppHobbies) CreateHobby(hobby *models.Hobby) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateHobby", hobby)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateHobby indicates an expected call of CreateHobby.
+func (mr *MockAppHobbiesMockRecorder) CreateHobby(hobby interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateHobby", reflect.TypeOf((*MockAppHobbies)(nil).CreateHobby), hobby)
+}
+
+// GetHobbies mocks base method.
+func (m *MockAppHobbies) GetHobbies() ([]models.ResponseHobby, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHobbies")
+	ret0, _ := ret[0].([]models.ResponseHobby)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHobbies indicates an expected call of GetHobbies.
+func (mr *MockAppHobbiesMockRecorder) GetHobbies() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHobbies", reflect.TypeOf((*MockAppHobbies)(nil).GetHobbies))
 }

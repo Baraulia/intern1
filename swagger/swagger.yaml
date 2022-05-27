@@ -97,6 +97,25 @@ components:
             $ref: '#/components/schemas/ResponseUser'
           type: array
       type: object
+    Hobby:
+      type: object
+      properties:
+        name:
+          type: string
+    ResponseHobby:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    ListHobbies:
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/ResponseCountry'
+          type: array
+      type: object
 paths:
   /countries:
     get:
@@ -348,4 +367,60 @@ paths:
           description: Internal Server Error
 
 
-
+  /users/{id}/hobbies:
+    get:
+      summary: Returns a list of hobbies by user id
+      tags:
+        - Users
+      parameters:
+        - description: Id
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: A JSON array of hobby`s id
+          content:
+            application/json:
+              schema:
+               type: array
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /hobbies:
+    get:
+      summary: Returns a list of hobbies
+      tags:
+        - Hobbies
+      responses:
+        '200':
+          description: A JSON array of hobbies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListHobbies'
+        '500':
+          description: Internal Server Error
+    post:
+      summary: Create new hobby
+      tags:
+        - Hobbies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Hobby'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad request
+        '500':
+          description: Server error

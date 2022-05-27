@@ -25,14 +25,22 @@ type AppUsers interface {
 	DeleteUser(userId int) error
 }
 
+type AppHobbies interface {
+	CreateHobby(hobby *models.Hobby) (int, error)
+	GetHobbyByUserId(userId int) ([]int, error)
+	GetHobbies() ([]models.ResponseHobby, error)
+}
+
 type Repository struct {
 	AppCountry
 	AppUsers
+	AppHobbies
 }
 
 func NewRepository(db *sql.DB, logger logging.Logger) *Repository {
 	return &Repository{
 		AppCountry: NewCountryRepository(db, logger),
 		AppUsers:   NewUserRepository(db, logger),
+		AppHobbies: NewHobbyRepository(db, logger),
 	}
 }

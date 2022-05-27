@@ -31,23 +31,32 @@ type Filters struct {
 }
 
 type User struct {
-	Name        string   `json:"name" valid:"alpha"`
-	Email       string   `json:"email" valid:"email"`
-	Description string   `json:"description"`
-	CountryId   int      `json:"country_id"`
-	Hobbies     []string `json:"hobbies"`
+	Name        string `json:"name" valid:"alpha"`
+	Email       string `json:"email" valid:"email"`
+	Description string `json:"description"`
+	CountryId   int    `json:"country_id"`
+	Hobbies     []int  `json:"hobbies"`
 }
 
 type ResponseUser struct {
-	Id          int      `json:"id"`
-	Name        string   `json:"name"`
-	Email       string   `json:"email"`
-	Description string   `json:"description"`
-	CountryId   int      `json:"country_id"`
-	Hobbies     []string `json:"hobbies"`
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Email       string `json:"email"`
+	Description string `json:"description"`
+	CountryId   int    `json:"country_id"`
+	Hobbies     []int  `json:"hobbies"`
 }
 
 type Options struct {
 	Page  uint64
 	Limit uint64
+}
+
+type Hobby struct {
+	Name string `json:"name" valid:"alpha"`
+}
+
+type ResponseHobby struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
 }

@@ -33,19 +33,14 @@ func TestRepository_CreateUser(t *testing.T) {
 				Email:       "test@test.ru",
 				Description: "test desc",
 				CountryId:   1,
-				Hobbies:     []string{"Бейсбол", "Теннис"},
+				Hobbies:     []int{1, 2},
 			},
 			mock: func(user *models.User) {
 				mock.ExpectBegin()
-				mock.ExpectExec("INSERT IGNORE INTO hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnResult(driver.ResultNoRows)
 				result := sqlmock.NewResult(1, 1)
 				mock.ExpectExec("INSERT INTO users").
 					WithArgs(user.Name, user.Email, user.Description, user.CountryId).
 					WillReturnResult(result)
-				rows := sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2)
-				mock.ExpectQuery("SELECT id FROM hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnRows(rows)
 				mock.ExpectExec("INSERT INTO users_hobbies").WithArgs(1, 1, 1, 2).
 					WillReturnResult(driver.ResultNoRows)
 				mock.ExpectCommit()
@@ -60,19 +55,14 @@ func TestRepository_CreateUser(t *testing.T) {
 				Email:       "test@test.ru",
 				Description: "test desc",
 				CountryId:   1,
-				Hobbies:     []string{"Бейсбол", "Теннис"},
+				Hobbies:     []int{1, 2},
 			},
 			mock: func(user *models.User) {
 				mock.ExpectBegin()
-				mock.ExpectExec("INSERT IGNORE INTO hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnResult(driver.ResultNoRows)
 				result := sqlmock.NewResult(1, 1)
 				mock.ExpectExec("INSERT INTO users").
 					WithArgs(user.Name, user.Email, user.Description, user.CountryId).
 					WillReturnResult(result)
-				rows := sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2)
-				mock.ExpectQuery("SELECT id FROM hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnRows(rows)
 				mock.ExpectExec("INSERT INTO users_hobbies").WithArgs(1, 1, 1, 2).
 					WillReturnError(errors.New("data base error"))
 				mock.ExpectRollback()
@@ -119,22 +109,17 @@ func TestRepository_ChangeUser(t *testing.T) {
 				Email:       "test@test.ru",
 				Description: "test desc",
 				CountryId:   1,
-				Hobbies:     []string{"Бейсбол", "Теннис"},
+				Hobbies:     []int{1, 2},
 			},
 			inputId: 1,
 			mock: func(user *models.User, userId int) {
 				mock.ExpectBegin()
-				mock.ExpectExec("INSERT IGNORE INTO hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnResult(driver.ResultNoRows)
 				result := sqlmock.NewResult(1, 1)
 				mock.ExpectExec("UPDATE users SET").
 					WithArgs(user.Name, user.Email, user.Description, user.CountryId, userId).
 					WillReturnResult(result)
 				mock.ExpectExec("DELETE FROM users_hobbies").WithArgs(1).
 					WillReturnResult(driver.ResultNoRows)
-				rows := sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2)
-				mock.ExpectQuery("SELECT id FROM hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnRows(rows)
 				mock.ExpectExec("INSERT INTO users_hobbies").WithArgs(1, 1, 1, 2).
 					WillReturnResult(driver.ResultNoRows)
 				mock.ExpectCommit()
@@ -148,13 +133,11 @@ func TestRepository_ChangeUser(t *testing.T) {
 				Email:       "test@test.ru",
 				Description: "test desc",
 				CountryId:   1,
-				Hobbies:     []string{"Бейсбол", "Теннис"},
+				Hobbies:     []int{1, 2},
 			},
 			inputId: 1,
 			mock: func(user *models.User, userId int) {
 				mock.ExpectBegin()
-				mock.ExpectExec("INSERT IGNORE INTO hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnResult(driver.ResultNoRows)
 				result := sqlmock.NewResult(0, 0)
 				mock.ExpectExec("UPDATE users SET").
 					WithArgs(user.Name, user.Email, user.Description, user.CountryId, userId).
@@ -170,22 +153,17 @@ func TestRepository_ChangeUser(t *testing.T) {
 				Email:       "test@test.ru",
 				Description: "test desc",
 				CountryId:   1,
-				Hobbies:     []string{"Бейсбол", "Теннис"},
+				Hobbies:     []int{1, 2},
 			},
 			inputId: 1,
 			mock: func(user *models.User, userId int) {
 				mock.ExpectBegin()
-				mock.ExpectExec("INSERT IGNORE INTO hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnResult(driver.ResultNoRows)
 				result := sqlmock.NewResult(1, 1)
 				mock.ExpectExec("UPDATE users SET").
 					WithArgs(user.Name, user.Email, user.Description, user.CountryId, userId).
 					WillReturnResult(result)
 				mock.ExpectExec("DELETE FROM users_hobbies").WithArgs(1).
 					WillReturnResult(driver.ResultNoRows)
-				rows := sqlmock.NewRows([]string{"id"}).AddRow(1).AddRow(2)
-				mock.ExpectQuery("SELECT id FROM hobbies").WithArgs(user.Hobbies[0], user.Hobbies[1]).
-					WillReturnRows(rows)
 				mock.ExpectExec("INSERT INTO users_hobbies").WithArgs(1, 1, 1, 2).
 					WillReturnError(errors.New("data base error"))
 				mock.ExpectRollback()
@@ -286,7 +264,7 @@ func TestRepository_GetUserById(t *testing.T) {
 			inputId: 1,
 			mock: func(userId int) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "description", "countryId", "list"}).
-					AddRow(1, "test name", "test email", "test desc", 1, []byte("Футбол"+","+"Тенис"))
+					AddRow(1, "test name", "test email", "test desc", 1, []byte("1"+","+"2"))
 				mock.ExpectQuery("SELECT users.id, ").WithArgs(userId).
 					WillReturnRows(rows)
 			},
@@ -296,7 +274,7 @@ func TestRepository_GetUserById(t *testing.T) {
 				Email:       "test email",
 				Description: "test desc",
 				CountryId:   1,
-				Hobbies:     []string{"Футбол", "Тенис"},
+				Hobbies:     []int{1, 2},
 			},
 			expectedError: false,
 		},
@@ -348,8 +326,8 @@ func TestRepository_GetUsers(t *testing.T) {
 			},
 			mock: func(filter *models.Options) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "description", "countryId", "list"}).
-					AddRow(1, "test name", "test email", "test desc", 1, []byte("Футбол"+","+"Тенис")).
-					AddRow(2, "test name2", "test email2", "test desc2", 1, []byte("Футбол"+","+"Тенис"))
+					AddRow(1, "test name", "test email", "test desc", 1, []byte("1"+","+"2")).
+					AddRow(2, "test name2", "test email2", "test desc2", 1, []byte("1"+","+"2"))
 				mock.ExpectQuery("SELECT users.id, ").WillReturnRows(rows)
 				rows = sqlmock.NewRows([]string{"pages"}).AddRow(1)
 				mock.ExpectQuery("SELECT CEILING").WithArgs(filter.Limit).WillReturnRows(rows)
@@ -361,7 +339,7 @@ func TestRepository_GetUsers(t *testing.T) {
 					Email:       "test email",
 					Description: "test desc",
 					CountryId:   1,
-					Hobbies:     []string{"Футбол", "Тенис"},
+					Hobbies:     []int{1, 2},
 				},
 				{
 					Id:          2,
@@ -369,7 +347,7 @@ func TestRepository_GetUsers(t *testing.T) {
 					Email:       "test email2",
 					Description: "test desc2",
 					CountryId:   1,
-					Hobbies:     []string{"Футбол", "Тенис"},
+					Hobbies:     []int{1, 2},
 				},
 			},
 			expectedError: false,
@@ -382,8 +360,8 @@ func TestRepository_GetUsers(t *testing.T) {
 			},
 			mock: func(filter *models.Options) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "description", "countryId", "list"}).
-					AddRow(1, "test name", "test email", "test desc", 1, []byte("Футбол"+","+"Тенис")).
-					AddRow(2, "test name2", "test email2", "test desc2", 1, []byte("Футбол"+","+"Тенис"))
+					AddRow(1, "test name", "test email", "test desc", 1, []byte("1"+","+"2")).
+					AddRow(2, "test name2", "test email2", "test desc2", 1, []byte("1"+","+"2"))
 				mock.ExpectQuery("SELECT users.id, ").WillReturnRows(rows)
 			},
 			expectedResult: []models.ResponseUser{
@@ -393,7 +371,7 @@ func TestRepository_GetUsers(t *testing.T) {
 					Email:       "test email",
 					Description: "test desc",
 					CountryId:   1,
-					Hobbies:     []string{"Футбол", "Тенис"},
+					Hobbies:     []int{1, 2},
 				},
 				{
 					Id:          2,
@@ -401,7 +379,7 @@ func TestRepository_GetUsers(t *testing.T) {
 					Email:       "test email2",
 					Description: "test desc2",
 					CountryId:   1,
-					Hobbies:     []string{"Футбол", "Тенис"},
+					Hobbies:     []int{1, 2},
 				},
 			},
 			expectedError: false,

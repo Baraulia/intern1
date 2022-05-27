@@ -34,3 +34,6 @@ func (u *UserService) ChangeUser(user *models.User, userId int) error {
 func (u *UserService) DeleteUser(userId int) error {
 	return u.repository.AppUsers.DeleteUser(userId)
 }
+func (u *UserService) GetHobbyByUserId(userId int) ([]int, error) {
+	return u.repository.AppHobbies.GetHobbyByUserId(userId)
+}

@@ -23,16 +23,24 @@ type AppUsers interface {
 	GetUsers(filter *models.Options) ([]models.ResponseUser, int, error)
 	ChangeUser(user *models.User, userId int) error
 	DeleteUser(userId int) error
+	GetHobbyByUserId(userId int) ([]int, error)
+}
+
+type AppHobbies interface {
+	CreateHobby(hobby *models.Hobby) (int, error)
+	GetHobbies() ([]models.ResponseHobby, error)
 }
 
 type Service struct {
 	AppCountries
 	AppUsers
+	AppHobbies
 }
 
 func NewService(repository *repositories.Repository, logger logging.Logger) *Service {
 	return &Service{
 		AppCountries: NewCountryService(repository, logger),
 		AppUsers:     NewUserService(repository, logger),
+		AppHobbies:   NewHobbyService(repository, logger),
 	}
 }
