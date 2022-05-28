@@ -15,7 +15,7 @@ import (
 	mockservice "tranee_service/services/mocks"
 )
 
-func TestHandler_getAllCountries(t *testing.T) {
+func TestGetAllCountries(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppCountries, filter *models.Filters)
 
 	testTable := []struct {
@@ -144,7 +144,7 @@ func TestHandler_getAllCountries(t *testing.T) {
 	}
 }
 
-func TestHandler_getOneCountry(t *testing.T) {
+func TestGetOneCountry(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppCountries, inputId string)
 
 	testTable := []struct {
@@ -229,7 +229,7 @@ func TestHandler_getOneCountry(t *testing.T) {
 	}
 }
 
-func TestHandler_createCountry(t *testing.T) {
+func TestCreateCountry(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppCountries, country *models.ResponseCountry)
 
 	testTable := []struct {
@@ -307,7 +307,7 @@ func TestHandler_createCountry(t *testing.T) {
 	}
 }
 
-func TestHandler_changeCountry(t *testing.T) {
+func TestChangeCountry(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppCountries, country *models.ResponseCountry, countryId string)
 
 	testTable := []struct {
@@ -402,7 +402,7 @@ func TestHandler_changeCountry(t *testing.T) {
 	}
 }
 
-func TestHandler_deleteCountry(t *testing.T) {
+func TestDeleteCountry(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppCountries, inputId string)
 
 	testTable := []struct {

@@ -13,7 +13,7 @@ import (
 	mockservice "tranee_service/services/mocks"
 )
 
-func TestHandler_getHobbies(t *testing.T) {
+func TestGetHobbies(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppHobbies)
 
 	testTable := []struct {
@@ -73,7 +73,7 @@ func TestHandler_getHobbies(t *testing.T) {
 	}
 }
 
-func TestHandler_createHobby(t *testing.T) {
+func TestCreateHobby(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppHobbies, hobby *models.Hobby)
 
 	testTable := []struct {

@@ -10,7 +10,7 @@ import (
 	"tranee_service/models"
 )
 
-func TestRepository_SaveInitialCountries(t *testing.T) {
+func TestSaveInitialCountries(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -143,7 +143,7 @@ func TestRepository_SaveInitialCountries(t *testing.T) {
 	}
 }
 
-func TestRepository_GetOneCountry(t *testing.T) {
+func TestGetOneCountry(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -204,7 +204,7 @@ func TestRepository_GetOneCountry(t *testing.T) {
 	}
 }
 
-func TestRepository_GetCountries(t *testing.T) {
+func TestGetCountries(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -369,7 +369,7 @@ func TestRepository_GetCountries(t *testing.T) {
 	}
 }
 
-func TestRepository_CreateCountry(t *testing.T) {
+func TestCreateCountry(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -446,7 +446,7 @@ func TestRepository_CreateCountry(t *testing.T) {
 	}
 }
 
-func TestRepository_ChangeCountry(t *testing.T) {
+func TestChangeCountry(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -520,7 +520,7 @@ func TestRepository_ChangeCountry(t *testing.T) {
 	}
 }
 
-func TestRepository_DeleteCountry(t *testing.T) {
+func TestDeleteCountry(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -567,7 +567,7 @@ func TestRepository_DeleteCountry(t *testing.T) {
 	}
 }
 
-func TestRepository_CheckCountryId(t *testing.T) {
+func TestCheckCountryId(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -614,7 +614,7 @@ func TestRepository_CheckCountryId(t *testing.T) {
 	}
 }
 
-func TestRepository_LoadImages(t *testing.T) {
+func TestLoadImages(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {

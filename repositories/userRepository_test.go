@@ -10,7 +10,7 @@ import (
 	"tranee_service/models"
 )
 
-func TestRepository_CreateUser(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -86,7 +86,7 @@ func TestRepository_CreateUser(t *testing.T) {
 	}
 }
 
-func TestRepository_ChangeUser(t *testing.T) {
+func TestChangeUser(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -185,7 +185,7 @@ func TestRepository_ChangeUser(t *testing.T) {
 	}
 }
 
-func TestRepository_DeleteUser(t *testing.T) {
+func TestDeleteUser(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -243,7 +243,7 @@ func TestRepository_DeleteUser(t *testing.T) {
 	}
 }
 
-func TestRepository_GetUserById(t *testing.T) {
+func TestGetUserById(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -302,7 +302,7 @@ func TestRepository_GetUserById(t *testing.T) {
 	}
 }
 
-func TestRepository_GetUsers(t *testing.T) {
+func TestGetUsers(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {

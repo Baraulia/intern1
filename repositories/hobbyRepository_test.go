@@ -9,7 +9,7 @@ import (
 	"tranee_service/models"
 )
 
-func TestRepository_GetHobbies(t *testing.T) {
+func TestGetHobbies(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -66,7 +66,7 @@ func TestRepository_GetHobbies(t *testing.T) {
 	}
 }
 
-func TestRepository_GetHobbyByUserId(t *testing.T) {
+func TestGetHobbyByUserId(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -117,7 +117,7 @@ func TestRepository_GetHobbyByUserId(t *testing.T) {
 	}
 }
 
-func TestRepository_CreateHobby(t *testing.T) {
+func TestCreateHobby(t *testing.T) {
 	logger := logging.GetLoggerLogrus()
 	db, mock, err := sqlmock.New()
 	if err != nil {

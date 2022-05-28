@@ -15,7 +15,7 @@ import (
 	mockservice "tranee_service/services/mocks"
 )
 
-func TestHandler_createUser(t *testing.T) {
+func TestCreateUser(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppUsers, country *models.User)
 
 	testTable := []struct {
@@ -93,7 +93,7 @@ func TestHandler_createUser(t *testing.T) {
 	}
 }
 
-func TestHandler_changeUser(t *testing.T) {
+func TestChangeUser(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppUsers, user *models.User, userId int)
 
 	testTable := []struct {
@@ -190,7 +190,7 @@ func TestHandler_changeUser(t *testing.T) {
 	}
 }
 
-func TestHandler_getUsers(t *testing.T) {
+func TestGetUsers(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppUsers, filter *models.Options)
 
 	testTable := []struct {
@@ -303,7 +303,7 @@ func TestHandler_getUsers(t *testing.T) {
 	}
 }
 
-func TestHandler_getUserById(t *testing.T) {
+func TestGetUserById(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppUsers, userId int)
 
 	testTable := []struct {
@@ -392,7 +392,7 @@ func TestHandler_getUserById(t *testing.T) {
 	}
 }
 
-func TestHandler_deleteUser(t *testing.T) {
+func TestDeleteUser(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppUsers, userId int)
 
 	testTable := []struct {
@@ -468,7 +468,7 @@ func TestHandler_deleteUser(t *testing.T) {
 	}
 }
 
-func TestHandler_getHobbyByUserId(t *testing.T) {
+func TestGetHobbyByUserId(t *testing.T) {
 	type mockBehavior func(s *mockservice.MockAppUsers, id int)
 
 	testTable := []struct {
