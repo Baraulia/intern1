@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/asaskevich/govalidator"
 	"net/http"
 	"strconv"
 	"strings"
+	"tranee_service/MyErrors"
 	"tranee_service/models"
 )
 
@@ -18,7 +20,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 		paramPage, err := strconv.Atoi(req.URL.Query().Get("page"))
 		if err != nil || paramPage < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, "Invalid url request", 400)
+			http.Error(w, "invalid url request", 400)
 			return
 		}
 		filters.Page = uint64(paramPage)
@@ -27,7 +29,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 		paramLimit, err := strconv.Atoi(req.URL.Query().Get("limit"))
 		if err != nil || paramLimit < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, "Invalid url request", 400)
+			http.Error(w, "invalid url request", 400)
 			return
 		}
 		filters.Limit = uint64(paramLimit)
@@ -36,7 +38,7 @@ func (h *Handler) getAllCountries(w http.ResponseWriter, req *http.Request) {
 		paramChunk := req.URL.Query().Get("chunk")
 		if paramChunk != "true" && paramChunk != "false" {
 			h.logger.Warnf("Invalid parameter 'chunk' passed")
-			http.Error(w, fmt.Sprintf("Invalid parameter 'chunk' passed"), 400)
+			http.Error(w, fmt.Sprintf("invalid parameter 'chunk' passed"), 400)
 			return
 		}
 		if paramChunk == "true" {
@@ -101,15 +103,15 @@ func (h *Handler) getOneCountry(w http.ResponseWriter, req *http.Request) {
 	countryId := strings.TrimPrefix(req.URL.Path, "/countries/")
 	if !govalidator.IsAlpha(countryId) {
 		h.logger.Warnf("Invalid url parameter")
-		http.Error(w, "Invalid url parameter", 400)
+		http.Error(w, "invalid url parameter", 400)
 		return
 	}
 	countryId = strings.ToUpper(countryId)
 	country, err := h.service.GetOneCountry(countryId)
 	if err != nil {
-		if err.Error() == "such a country does not exist" {
+		if errors.Is(err, MyErrors.DoesNotExist) {
 			h.logger.Warnf("getOneCountry: such country does not exist")
-			http.Error(w, "such country does not exist", 404)
+			http.Error(w, MyErrors.DoesNotExist.Error(), 404)
 			return
 		}
 		h.logger.Warnf("getOneCountry: server error: %s", err)
@@ -141,7 +143,7 @@ func (h *Handler) createCountry(w http.ResponseWriter, req *http.Request) {
 	}
 	result, err := govalidator.ValidateStruct(input)
 	if !result {
-		h.logger.Errorf("Incorrect data came from the request:%s", err)
+		h.logger.Errorf("incorrect data came from the request:%s", err)
 		http.Error(w, err.Error(), 400)
 		return
 	}
@@ -172,15 +174,15 @@ func (h *Handler) changeCountry(w http.ResponseWriter, req *http.Request) {
 	countryId := strings.TrimPrefix(req.URL.Path, "/countries/")
 	if !govalidator.IsAlpha(countryId) {
 		h.logger.Warnf("Invalid url parameter")
-		http.Error(w, "Invalid url parameter", 400)
+		http.Error(w, "invalid url parameter", 400)
 		return
 	}
 	countryId = strings.ToUpper(countryId)
 	err = h.service.ChangeCountry(&input, countryId)
 	if err != nil {
-		if err.Error() == "such a country does not exist" {
+		if errors.Is(err, MyErrors.DoesNotExist) {
 			h.logger.Warnf("changeCountry: such country does not exist")
-			http.Error(w, "such country does not exist", 404)
+			http.Error(w, MyErrors.DoesNotExist.Error(), 404)
 			return
 		}
 		h.logger.Errorf(err.Error())
@@ -194,15 +196,15 @@ func (h *Handler) deleteCountry(w http.ResponseWriter, req *http.Request) {
 	reqId := strings.TrimPrefix(req.URL.Path, "/countries/")
 	if !govalidator.IsAlpha(reqId) {
 		h.logger.Warnf("Invalid url parameter")
-		http.Error(w, "Invalid url parameter", 400)
+		http.Error(w, "invalid url parameter", 400)
 		return
 	}
 	reqId = strings.ToUpper(reqId)
 	err := h.service.DeleteCountry(reqId)
 	if err != nil {
-		if err.Error() == "country with such Id does not exist" {
+		if errors.Is(err, MyErrors.DoesNotExist) {
 			h.logger.Warnf("deleteCountry: such country does not exist")
-			http.Error(w, "such country does not exist", 404)
+			http.Error(w, MyErrors.DoesNotExist.Error(), 404)
 			return
 		}
 		h.logger.Errorf(err.Error())

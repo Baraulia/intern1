@@ -23,8 +23,8 @@ func (u *UserService) GetUserById(userId int) (*models.ResponseUser, error) {
 	return u.repository.AppUsers.GetUserById(userId)
 }
 
-func (u *UserService) GetUsers(filter *models.Options) ([]models.ResponseUser, int, error) {
-	return u.repository.AppUsers.GetUsers(filter)
+func (u *UserService) GetUsers(options *models.Options) ([]models.ResponseUser, int, error) {
+	return u.repository.AppUsers.GetUsers(options)
 }
 
 func (u *UserService) ChangeUser(user *models.User, userId int) error {

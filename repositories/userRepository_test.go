@@ -313,24 +313,24 @@ func TestRepository_GetUsers(t *testing.T) {
 
 	testTable := []struct {
 		name           string
-		mock           func(filter *models.Options)
-		inputFilter    *models.Options
+		mock           func(options *models.Options)
+		inputOptions   *models.Options
 		expectedResult []models.ResponseUser
 		expectedError  bool
 	}{
 		{
 			name: "OK",
-			inputFilter: &models.Options{
+			inputOptions: &models.Options{
 				Page:  1,
 				Limit: 2,
 			},
-			mock: func(filter *models.Options) {
+			mock: func(options *models.Options) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "description", "countryId", "list"}).
 					AddRow(1, "test name", "test email", "test desc", 1, []byte("1"+","+"2")).
 					AddRow(2, "test name2", "test email2", "test desc2", 1, []byte("1"+","+"2"))
 				mock.ExpectQuery("SELECT users.id, ").WillReturnRows(rows)
 				rows = sqlmock.NewRows([]string{"pages"}).AddRow(1)
-				mock.ExpectQuery("SELECT CEILING").WithArgs(filter.Limit).WillReturnRows(rows)
+				mock.ExpectQuery("SELECT CEILING").WithArgs(options.Limit).WillReturnRows(rows)
 			},
 			expectedResult: []models.ResponseUser{
 				{
@@ -354,11 +354,11 @@ func TestRepository_GetUsers(t *testing.T) {
 		},
 		{
 			name: "OK without pagination",
-			inputFilter: &models.Options{
+			inputOptions: &models.Options{
 				Page:  0,
 				Limit: 0,
 			},
-			mock: func(filter *models.Options) {
+			mock: func(options *models.Options) {
 				rows := sqlmock.NewRows([]string{"id", "name", "email", "description", "countryId", "list"}).
 					AddRow(1, "test name", "test email", "test desc", 1, []byte("1"+","+"2")).
 					AddRow(2, "test name2", "test email2", "test desc2", 1, []byte("1"+","+"2"))
@@ -386,7 +386,7 @@ func TestRepository_GetUsers(t *testing.T) {
 		},
 		{
 			name: "Data base error",
-			inputFilter: &models.Options{
+			inputOptions: &models.Options{
 				Page:  1,
 				Limit: 2,
 			},
@@ -398,8 +398,8 @@ func TestRepository_GetUsers(t *testing.T) {
 	}
 	for _, tt := range testTable {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.mock(tt.inputFilter)
-			countries, _, err := r.GetUsers(tt.inputFilter)
+			tt.mock(tt.inputOptions)
+			countries, _, err := r.GetUsers(tt.inputOptions)
 			if tt.expectedError {
 				assert.Error(t, err)
 			} else {

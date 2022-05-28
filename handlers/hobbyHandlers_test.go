@@ -51,7 +51,6 @@ func TestHandler_getHobbies(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppHobbies(c)
@@ -60,18 +59,14 @@ func TestHandler_getHobbies(t *testing.T) {
 			serv := &services.Service{AppHobbies: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("GET", "/hobbies", nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 			assert.Equal(t, testCase.expectedRequestBody, w.Body.String())
 		})
@@ -117,7 +112,6 @@ func TestHandler_createHobby(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppHobbies(c)
@@ -126,18 +120,14 @@ func TestHandler_createHobby(t *testing.T) {
 			serv := &services.Service{AppHobbies: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("POST", "/hobbies", bytes.NewBufferString(testCase.inputBody))
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 		})
 	}

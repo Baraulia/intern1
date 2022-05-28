@@ -3,6 +3,8 @@ package repositories
 import (
 	"database/sql"
 	"fmt"
+	"github.com/pkg/errors"
+	"tranee_service/MyErrors"
 	"tranee_service/internal/logging"
 	"tranee_service/models"
 )
@@ -22,16 +24,20 @@ func (h *HobbyRepository) GetHobbyByUserId(userId int) ([]int, error) {
 	rows, err := h.db.Query(query, userId)
 	if err != nil {
 		h.logger.Errorf("GetHobbyByUserId: can not executes a query:%s", err)
-		return nil, fmt.Errorf("GetHobbyByUserId: can not executes a query:%s", err)
+		return nil, fmt.Errorf("getHobbyByUserId: can not executes a query:%s", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var id int
 		if err := rows.Scan(&id); err != nil {
 			h.logger.Errorf("Error while scanning for hobby id:%s", err)
-			return nil, fmt.Errorf("GetHobbyByUserId:repository error:%w", err)
+			return nil, fmt.Errorf("getHobbyByUserId:repository error:%w", err)
 		}
 		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		h.logger.Errorf("GetHobbyByUserId:object with this id does not exist")
+		return nil, errors.Wrap(MyErrors.DoesNotExist, "getHobbyByUserId")
 	}
 	return ids, nil
 }
@@ -42,12 +48,12 @@ func (h *HobbyRepository) CreateHobby(hobby *models.Hobby) (int, error) {
 	result, err := h.db.Exec(query, hobby.Name)
 	if err != nil {
 		h.logger.Errorf("CreateHobby: can not adding new hobby:%s", err)
-		return 0, fmt.Errorf("CreateHobby: can not adding new hobby:%w", err)
+		return 0, fmt.Errorf("createHobby: can not adding new hobby:%w", err)
 	}
 	insertId, err := result.LastInsertId()
 	if err != nil {
 		h.logger.Errorf("CreateHobby: error while getting insertId:%s", err)
-		return 0, fmt.Errorf("CreateHobby: error while getting insertId:%w", err)
+		return 0, fmt.Errorf("createHobby: error while getting insertId:%w", err)
 	}
 	id = int(insertId)
 	return id, nil
@@ -59,14 +65,14 @@ func (h *HobbyRepository) GetHobbies() ([]models.ResponseHobby, error) {
 	rows, err := h.db.Query(query)
 	if err != nil {
 		h.logger.Errorf("GetHobbies: can not executes a query:%s", err)
-		return nil, fmt.Errorf("GetHobbies: can not executes a query:%s", err)
+		return nil, fmt.Errorf("getHobbies: can not executes a query:%s", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var hobby models.ResponseHobby
 		if err := rows.Scan(&hobby.Id, &hobby.Name); err != nil {
 			h.logger.Errorf("Error while scanning for hobby:%s", err)
-			return nil, fmt.Errorf("GetHobbies:repository error:%w", err)
+			return nil, fmt.Errorf("getHobbies:repository error:%w", err)
 		}
 		hobbies = append(hobbies, hobby)
 	}

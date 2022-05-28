@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/asaskevich/govalidator"
 	"net/http"
 	"strconv"
 	"strings"
+	"tranee_service/MyErrors"
 	"tranee_service/models"
 )
 
@@ -40,7 +42,7 @@ func (h *Handler) getUsers(w http.ResponseWriter, req *http.Request) {
 		paramPage, err := strconv.Atoi(req.URL.Query().Get("page"))
 		if err != nil || paramPage < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, "Invalid url request", 400)
+			http.Error(w, "invalid url request", 400)
 			return
 		}
 		options.Page = uint64(paramPage)
@@ -49,7 +51,7 @@ func (h *Handler) getUsers(w http.ResponseWriter, req *http.Request) {
 		paramLimit, err := strconv.Atoi(req.URL.Query().Get("limit"))
 		if err != nil || paramLimit < 0 {
 			h.logger.Warnf("Invalid url request:%s", err)
-			http.Error(w, "Invalid url request", 400)
+			http.Error(w, "invalid url request", 400)
 			return
 		}
 		options.Limit = uint64(paramLimit)
@@ -81,14 +83,14 @@ func (h *Handler) getUserById(w http.ResponseWriter, req *http.Request) {
 	userId, err := strconv.Atoi(paramId)
 	if err != nil || userId <= 0 {
 		h.logger.Warnf("Invalid request:%s", err)
-		http.Error(w, "Invalid url request", 400)
+		http.Error(w, "invalid url request", 400)
 		return
 	}
 	user, err := h.service.AppUsers.GetUserById(userId)
 	if err != nil {
-		if err.Error() == "such a user does not exist" {
+		if errors.Is(err, MyErrors.DoesNotExist) {
 			h.logger.Warnf("getUserById: such user does not exist")
-			http.Error(w, "such user does not exist", 404)
+			http.Error(w, MyErrors.DoesNotExist.Error(), 404)
 			return
 		}
 		h.logger.Warnf("getUserById: server error: %s", err)
@@ -128,14 +130,14 @@ func (h *Handler) changeUser(w http.ResponseWriter, req *http.Request) {
 	userId, err := strconv.Atoi(paramId)
 	if err != nil || userId <= 0 {
 		h.logger.Warnf("Invalid request:%s", err)
-		http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
+		http.Error(w, fmt.Sprintf("invalid url request:%s", err), 400)
 		return
 	}
 	err = h.service.AppUsers.ChangeUser(&input, userId)
 	if err != nil {
-		if err.Error() == "such a user does not exist" {
+		if errors.Is(err, MyErrors.DoesNotExist) {
 			h.logger.Warnf("changeUser: such user does not exist")
-			http.Error(w, "such user does not exist", 404)
+			http.Error(w, MyErrors.DoesNotExist.Error(), 404)
 			return
 		}
 		h.logger.Errorf(err.Error())
@@ -150,14 +152,14 @@ func (h *Handler) deleteUser(w http.ResponseWriter, req *http.Request) {
 	userId, err := strconv.Atoi(paramId)
 	if err != nil || userId <= 0 {
 		h.logger.Warnf("Invalid request:%s", err)
-		http.Error(w, fmt.Sprintf("Invalid url request:%s", err), 400)
+		http.Error(w, fmt.Sprintf("invalid url request:%s", err), 400)
 		return
 	}
 	err = h.service.AppUsers.DeleteUser(userId)
 	if err != nil {
-		if err.Error() == "user with such Id does not exist" {
+		if errors.Is(err, MyErrors.DoesNotExist) {
 			h.logger.Warnf("deleteUser: such user does not exist")
-			http.Error(w, "such user does not exist", 404)
+			http.Error(w, MyErrors.DoesNotExist.Error(), 404)
 			return
 		}
 		h.logger.Errorf(err.Error())
@@ -173,14 +175,14 @@ func (h *Handler) getHobbyByUserId(w http.ResponseWriter, req *http.Request) {
 	userId, err := strconv.Atoi(paramId)
 	if err != nil || userId <= 0 {
 		h.logger.Warnf("Invalid request:%s", err)
-		http.Error(w, "Invalid url request", 400)
+		http.Error(w, "invalid url request", 400)
 		return
 	}
 	hobbiesId, err := h.service.AppUsers.GetHobbyByUserId(userId)
 	if err != nil {
-		if err.Error() == "user with such Id does not exist" {
+		if errors.Is(err, MyErrors.DoesNotExist) {
 			h.logger.Warnf("getHobbyByUserId: such user does not exist")
-			http.Error(w, "such user does not exist", 404)
+			http.Error(w, MyErrors.DoesNotExist.Error(), 404)
 			return
 		}
 		h.logger.Errorf(err.Error())

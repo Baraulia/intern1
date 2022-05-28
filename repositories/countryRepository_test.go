@@ -477,9 +477,10 @@ func TestRepository_ChangeCountry(t *testing.T) {
 			},
 			inputId: "TT",
 			mock: func(country *models.ResponseCountry, countryId string) {
+				result := sqlmock.NewResult(1, 1)
 				mock.ExpectExec("UPDATE IGNORE countries").
 					WithArgs(country.Name, country.FullName, country.EnglishName, country.Alpha2, country.Alpha3, country.Iso, country.Location, country.LocationPrecise, country.Url, countryId, countryId).
-					WillReturnResult(driver.ResultNoRows)
+					WillReturnResult(result)
 			},
 			expectedError: false,
 		},

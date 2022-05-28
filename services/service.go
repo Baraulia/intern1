@@ -20,7 +20,7 @@ type AppCountries interface {
 type AppUsers interface {
 	CreateUser(user *models.User) (int, error)
 	GetUserById(userId int) (*models.ResponseUser, error)
-	GetUsers(filter *models.Options) ([]models.ResponseUser, int, error)
+	GetUsers(options *models.Options) ([]models.ResponseUser, int, error)
 	ChangeUser(user *models.User, userId int) error
 	DeleteUser(userId int) error
 	GetHobbyByUserId(userId int) ([]int, error)

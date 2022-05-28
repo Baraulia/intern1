@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/gorilla/mux"
+	"net/http"
 	"tranee_service/internal/logging"
 	"tranee_service/services"
 )
@@ -17,22 +18,22 @@ func NewHandler(service *services.Service, logger logging.Logger) *Handler {
 
 func (h *Handler) InitRoutes() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/countries/{id}", h.getOneCountry).Methods("GET")
-	r.HandleFunc("/countries", h.getAllCountries).Methods("GET")
-	r.HandleFunc("/countries", h.createCountry).Methods("POST")
-	r.HandleFunc("/countries/{id}", h.changeCountry).Methods("PUT")
-	r.HandleFunc("/countries/{id}", h.deleteCountry).Methods("DELETE")
-	r.HandleFunc("/load-images", h.loadImages).Methods("GET")
+	r.HandleFunc("/countries/{id}", h.getOneCountry).Methods(http.MethodGet)
+	r.HandleFunc("/countries", h.getAllCountries).Methods(http.MethodGet)
+	r.HandleFunc("/countries", h.createCountry).Methods(http.MethodPost)
+	r.HandleFunc("/countries/{id}", h.changeCountry).Methods(http.MethodPut)
+	r.HandleFunc("/countries/{id}", h.deleteCountry).Methods(http.MethodDelete)
+	r.HandleFunc("/load-images", h.loadImages).Methods(http.MethodGet)
 
-	r.HandleFunc("/users", h.createUser).Methods("POST")
-	r.HandleFunc("/users", h.getUsers).Methods("GET")
-	r.HandleFunc("/users/{id}", h.getUserById).Methods("GET")
-	r.HandleFunc("/users/{id}", h.changeUser).Methods("PUT")
-	r.HandleFunc("/users/{id}", h.deleteUser).Methods("DELETE")
-	r.HandleFunc("/users/{id}/hobbies", h.getHobbyByUserId).Methods("GET")
+	r.HandleFunc("/users", h.createUser).Methods(http.MethodPost)
+	r.HandleFunc("/users", h.getUsers).Methods(http.MethodGet)
+	r.HandleFunc("/users/{id}", h.getUserById).Methods(http.MethodGet)
+	r.HandleFunc("/users/{id}", h.changeUser).Methods(http.MethodPut)
+	r.HandleFunc("/users/{id}", h.deleteUser).Methods(http.MethodDelete)
+	r.HandleFunc("/users/{id}/hobbies", h.getHobbyByUserId).Methods(http.MethodGet)
 
-	r.HandleFunc("/hobbies", h.createHobby).Methods("POST")
-	r.HandleFunc("/hobbies", h.getHobbies).Methods("GET")
+	r.HandleFunc("/hobbies", h.createHobby).Methods(http.MethodPost)
+	r.HandleFunc("/hobbies", h.getHobbies).Methods(http.MethodGet)
 
 	return r
 }

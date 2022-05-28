@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http/httptest"
 	"testing"
+	"tranee_service/MyErrors"
 	"tranee_service/internal/logging"
 	"tranee_service/models"
 	"tranee_service/services"
@@ -71,7 +72,6 @@ func TestHandler_createUser(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppUsers(c)
@@ -80,18 +80,14 @@ func TestHandler_createUser(t *testing.T) {
 			serv := &services.Service{AppUsers: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("POST", "/users", bytes.NewBufferString(testCase.inputBody))
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 		})
 	}
@@ -165,7 +161,7 @@ func TestHandler_changeUser(t *testing.T) {
 				Hobbies:     []int{1, 2, 3},
 			},
 			mockBehavior: func(s *mockservice.MockAppUsers, user *models.User, userId int) {
-				s.EXPECT().ChangeUser(user, userId).Return(errors.New("such a user does not exist"))
+				s.EXPECT().ChangeUser(user, userId).Return(MyErrors.DoesNotExist)
 			},
 			expectedStatusCode: 404,
 		},
@@ -173,7 +169,6 @@ func TestHandler_changeUser(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppUsers(c)
@@ -182,18 +177,14 @@ func TestHandler_changeUser(t *testing.T) {
 			serv := &services.Service{AppUsers: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("PUT", fmt.Sprintf("/users/%s", testCase.pathId), bytes.NewBufferString(testCase.inputBody))
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 		})
 	}
@@ -266,7 +257,7 @@ func TestHandler_getUsers(t *testing.T) {
 			inputFilter:         &models.Options{},
 			mockBehavior:        func(s *mockservice.MockAppUsers, filter *models.Options) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:                "Invalid query2",
@@ -274,7 +265,7 @@ func TestHandler_getUsers(t *testing.T) {
 			inputFilter:         &models.Options{},
 			mockBehavior:        func(s *mockservice.MockAppUsers, filter *models.Options) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:        "Server error",
@@ -290,7 +281,6 @@ func TestHandler_getUsers(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppUsers(c)
@@ -299,18 +289,14 @@ func TestHandler_getUsers(t *testing.T) {
 			serv := &services.Service{AppUsers: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("GET", fmt.Sprintf("/users%s", testCase.pathQuery), nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 			assert.Equal(t, testCase.expectedRequestBody, w.Body.String())
 		})
@@ -350,7 +336,7 @@ func TestHandler_getUserById(t *testing.T) {
 			userId:              1,
 			mockBehavior:        func(s *mockservice.MockAppUsers, userId int) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:                "Invalid query2",
@@ -358,7 +344,7 @@ func TestHandler_getUserById(t *testing.T) {
 			userId:              1,
 			mockBehavior:        func(s *mockservice.MockAppUsers, userId int) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:      "Server error",
@@ -375,16 +361,15 @@ func TestHandler_getUserById(t *testing.T) {
 			pathQuery: "1",
 			userId:    1,
 			mockBehavior: func(s *mockservice.MockAppUsers, userId int) {
-				s.EXPECT().GetUserById(userId).Return(nil, errors.New("such a user does not exist"))
+				s.EXPECT().GetUserById(userId).Return(nil, MyErrors.DoesNotExist)
 			},
 			expectedStatusCode:  404,
-			expectedRequestBody: "such user does not exist\n",
+			expectedRequestBody: "object with this id does not exist\n",
 		},
 	}
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppUsers(c)
@@ -393,18 +378,14 @@ func TestHandler_getUserById(t *testing.T) {
 			serv := &services.Service{AppUsers: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("GET", fmt.Sprintf("/users/%s", testCase.pathQuery), nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 			assert.Equal(t, testCase.expectedRequestBody, w.Body.String())
 		})
@@ -458,7 +439,7 @@ func TestHandler_deleteUser(t *testing.T) {
 			pathQuery: "1",
 			userId:    1,
 			mockBehavior: func(s *mockservice.MockAppUsers, userId int) {
-				s.EXPECT().DeleteUser(userId).Return(errors.New("user with such Id does not exist"))
+				s.EXPECT().DeleteUser(userId).Return(MyErrors.DoesNotExist)
 			},
 			expectedStatusCode: 404,
 		},
@@ -466,7 +447,6 @@ func TestHandler_deleteUser(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppUsers(c)
@@ -475,18 +455,14 @@ func TestHandler_deleteUser(t *testing.T) {
 			serv := &services.Service{AppUsers: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("DELETE", fmt.Sprintf("/users/%s", testCase.pathQuery), nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 		})
 	}
@@ -519,7 +495,7 @@ func TestHandler_getHobbyByUserId(t *testing.T) {
 			inputId:             0,
 			mockBehavior:        func(s *mockservice.MockAppUsers, id int) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:                "Invalid query2",
@@ -527,17 +503,17 @@ func TestHandler_getHobbyByUserId(t *testing.T) {
 			inputId:             0,
 			mockBehavior:        func(s *mockservice.MockAppUsers, id int) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:      "Such user does not exist",
 			pathQuery: "1",
 			inputId:   1,
 			mockBehavior: func(s *mockservice.MockAppUsers, id int) {
-				s.EXPECT().GetHobbyByUserId(id).Return(nil, errors.New("user with such Id does not exist"))
+				s.EXPECT().GetHobbyByUserId(id).Return(nil, MyErrors.DoesNotExist)
 			},
 			expectedStatusCode:  404,
-			expectedRequestBody: "such user does not exist\n",
+			expectedRequestBody: "object with this id does not exist\n",
 		},
 		{
 			name:      "Server error",
@@ -553,7 +529,6 @@ func TestHandler_getHobbyByUserId(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppUsers(c)
@@ -562,18 +537,14 @@ func TestHandler_getHobbyByUserId(t *testing.T) {
 			serv := &services.Service{AppUsers: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("GET", fmt.Sprintf("/users/%s/hobbies", testCase.pathQuery), nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 			assert.Equal(t, testCase.expectedRequestBody, w.Body.String())
 		})

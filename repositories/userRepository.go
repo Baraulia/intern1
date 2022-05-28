@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/Masterminds/squirrel"
+	"github.com/pkg/errors"
 	"strconv"
 	"strings"
+	"tranee_service/MyErrors"
 	"tranee_service/internal/logging"
 	"tranee_service/models"
 )
@@ -24,7 +26,7 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 	transaction, err := u.db.Begin()
 	if err != nil {
 		u.logger.Errorf("CreateUser: can not starts transaction:%s", err)
-		return 0, fmt.Errorf("CreateUser: can not starts transaction:%w", err)
+		return 0, fmt.Errorf("createUser: can not starts transaction:%w", err)
 	}
 	defer transaction.Rollback()
 
@@ -32,12 +34,12 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 	result, err := transaction.Exec(query, user.Name, user.Email, user.Description, user.CountryId)
 	if err != nil {
 		u.logger.Errorf("CreateUser: error while insert user:%s", err)
-		return 0, fmt.Errorf("CreateUser: error while insert user:%w", err)
+		return 0, fmt.Errorf("createUser: error while insert user:%w", err)
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
 		u.logger.Errorf("CreateUser: error while getting insertId:%s", err)
-		return 0, fmt.Errorf("CreateUser: error while getting insertId:%w", err)
+		return 0, fmt.Errorf("createUser: error while getting insertId:%w", err)
 	}
 	userId = int(id)
 	query = "INSERT INTO users_hobbies (user_id, hobby_id) values "
@@ -50,7 +52,7 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 	_, err = transaction.Exec(query, values...)
 	if err != nil {
 		u.logger.Errorf("CreateUser: error while insert users_hobbies:%s", err)
-		return 0, fmt.Errorf("CreateUser: error while insert users_hobbies:%w", err)
+		return 0, fmt.Errorf("createUser: error while insert users_hobbies:%w", err)
 	}
 	return userId, transaction.Commit()
 }
@@ -62,13 +64,18 @@ func (u *UserRepository) GetUserById(userId int) (*models.ResponseUser, error) {
 	query, args, err := s.ToSql()
 	if err != nil {
 		u.logger.Errorf("GetUserById: can not builds the query into a SQL:%s", err)
-		return nil, fmt.Errorf("GetUserById: can not builds the query into a SQL:%s", err)
+		return nil, fmt.Errorf("getUserById: can not builds the query into a SQL:%s", err)
 	}
 	row := u.db.QueryRow(query, args...)
 	var bytesHobby []byte
 	if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Description, &user.CountryId, &bytesHobby); err != nil {
-		u.logger.Errorf("Error while scanning for user:%s", err)
-		return nil, fmt.Errorf("GetUserById: repository error:%w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			u.logger.Errorf("GetUserById:object with this id does not exist")
+			return nil, errors.Wrap(MyErrors.DoesNotExist, "getUserById")
+		} else {
+			u.logger.Errorf("Error while scanning for user:%s", err)
+			return nil, fmt.Errorf("getUserById: repository error:%w", err)
+		}
 	}
 	strHobby := string(bytesHobby[:])
 	sliceHobby := strings.Split(strHobby, ",")
@@ -76,21 +83,21 @@ func (u *UserRepository) GetUserById(userId int) (*models.ResponseUser, error) {
 		number, err := strconv.Atoi(n)
 		if err != nil {
 			u.logger.Errorf("Error while converting hobby`s id:%s", err)
-			return nil, fmt.Errorf("GetUserById: Error while converting hobby`s id:%w", err)
+			return nil, fmt.Errorf("getUserById: Error while converting hobby`s id:%w", err)
 		}
 		user.Hobbies = append(user.Hobbies, number)
 	}
 	return &user, nil
 }
 
-func (u *UserRepository) GetUsers(filter *models.Options) ([]models.ResponseUser, int, error) {
+func (u *UserRepository) GetUsers(options *models.Options) ([]models.ResponseUser, int, error) {
 	var users []models.ResponseUser
 	var sel squirrel.SelectBuilder
 	var pages int
 	s := squirrel.Select("users.id, users.name, users.email, users.description, users.country_id, GROUP_CONCAT(users_hobbies.hobby_id) AS list").From("users").
 		Join("users_hobbies on users.id = users_hobbies.user_id").GroupBy("users.id")
-	if filter.Page != 0 && filter.Limit != 0 {
-		sel = s.Limit(filter.Limit).Offset((filter.Page - 1) * filter.Limit).OrderBy("users.id")
+	if options.Page != 0 && options.Limit != 0 {
+		sel = s.Limit(options.Limit).Offset((options.Page - 1) * options.Limit).OrderBy("users.id")
 	} else {
 		sel = s
 		pages = 1
@@ -98,12 +105,12 @@ func (u *UserRepository) GetUsers(filter *models.Options) ([]models.ResponseUser
 	query, args, err := sel.ToSql()
 	if err != nil {
 		u.logger.Errorf("GetUsers: can not builds the query into a SQL:%s", err)
-		return nil, 0, fmt.Errorf("GetUsers: can not builds the query into a SQL:%s", err)
+		return nil, 0, fmt.Errorf("getUsers: can not builds the query into a SQL:%s", err)
 	}
 	rows, err := u.db.Query(query, args...)
 	if err != nil {
 		u.logger.Errorf("GetUsers: can not executes a query:%s", err)
-		return nil, 0, fmt.Errorf("GetUsers: can not executes a query:%s", err)
+		return nil, 0, fmt.Errorf("getUsers: can not executes a query:%s", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -111,7 +118,7 @@ func (u *UserRepository) GetUsers(filter *models.Options) ([]models.ResponseUser
 		var user models.ResponseUser
 		if err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.Description, &user.CountryId, &bytesHobby); err != nil {
 			u.logger.Errorf("Error while scanning for user:%s", err)
-			return nil, 0, fmt.Errorf("GetUsers:repository error:%w", err)
+			return nil, 0, fmt.Errorf("getUsers:repository error:%w", err)
 		}
 		strHobby := string(bytesHobby[:])
 		sliceHobby := strings.Split(strHobby, ",")
@@ -119,7 +126,7 @@ func (u *UserRepository) GetUsers(filter *models.Options) ([]models.ResponseUser
 			number, err := strconv.Atoi(n)
 			if err != nil {
 				u.logger.Errorf("Error while converting hobby`s id:%s", err)
-				return nil, 0, fmt.Errorf("GetUsers: Error while converting hobby`s id:%w", err)
+				return nil, 0, fmt.Errorf("getUsers: Error while converting hobby`s id:%w", err)
 			}
 			user.Hobbies = append(user.Hobbies, number)
 		}
@@ -128,7 +135,7 @@ func (u *UserRepository) GetUsers(filter *models.Options) ([]models.ResponseUser
 
 	if pages != 1 {
 		query = "SELECT CEILING(COUNT(*)/?) FROM users"
-		row := u.db.QueryRow(query, filter.Limit)
+		row := u.db.QueryRow(query, options.Limit)
 		if err := row.Scan(&pages); err != nil {
 			u.logger.Errorf("Error while scanning for pages:%s", err)
 			return nil, 0, fmt.Errorf("error while scanning for pages:%s", err)
@@ -141,7 +148,7 @@ func (u *UserRepository) ChangeUser(user *models.User, userId int) error {
 	transaction, err := u.db.Begin()
 	if err != nil {
 		u.logger.Errorf("ChangeUser: can not starts transaction:%s", err)
-		return fmt.Errorf("ChangeUser: can not starts transaction:%w", err)
+		return fmt.Errorf("changeUser: can not starts transaction:%w", err)
 	}
 	defer transaction.Rollback()
 
@@ -149,23 +156,23 @@ func (u *UserRepository) ChangeUser(user *models.User, userId int) error {
 	result, err := transaction.Exec(query, user.Name, user.Email, user.Description, user.CountryId, userId)
 	if err != nil {
 		u.logger.Errorf("ChangeUser: error while updating user:%s", err)
-		return fmt.Errorf("ChangeUser: error while updating user:%w", err)
+		return fmt.Errorf("changeUser: error while updating user:%w", err)
 	}
 	numberRows, err := result.RowsAffected()
 	if err != nil {
 		u.logger.Errorf("Error while getting number affected rows:%s", err)
-		return fmt.Errorf("ChangeUser: error while getting number affected rows:%s", err)
+		return fmt.Errorf("changeUser: error while getting number affected rows:%s", err)
 	}
 	if numberRows == 0 {
-		u.logger.Errorf("User with such Id does not exist", err)
-		return fmt.Errorf("user with such Id does not exist")
+		u.logger.Errorf("ChangeUser:object with this id does not exist")
+		return errors.Wrap(MyErrors.DoesNotExist, "changeUser")
 	}
 
 	query = "DELETE FROM users_hobbies WHERE user_id = ?"
 	_, err = transaction.Exec(query, userId)
 	if err != nil {
 		u.logger.Errorf("ChangeUser: error while deleting bound relations:%s", err)
-		return fmt.Errorf("ChangeUser: error whiledeleting bound relations:%w", err)
+		return fmt.Errorf("changeUser: error whiledeleting bound relations:%w", err)
 	}
 
 	query = "INSERT INTO users_hobbies (user_id, hobby_id) values "
@@ -178,7 +185,7 @@ func (u *UserRepository) ChangeUser(user *models.User, userId int) error {
 	_, err = transaction.Exec(query, values...)
 	if err != nil {
 		u.logger.Errorf("ChangeUser: error while insert users_hobbies:%s", err)
-		return fmt.Errorf("ChangeUser: error while insert users_hobbies:%w", err)
+		return fmt.Errorf("changeUser: error while insert users_hobbies:%w", err)
 	}
 	return transaction.Commit()
 }
@@ -188,16 +195,16 @@ func (u *UserRepository) DeleteUser(userId int) error {
 	result, err := u.db.Exec(query, userId)
 	if err != nil {
 		u.logger.Errorf("DeleteUser: can not executes a query:%s", err)
-		return fmt.Errorf("DeleteUser: can not executes a query:%s", err)
+		return fmt.Errorf("deleteUser: can not executes a query:%s", err)
 	}
 	numberRows, err := result.RowsAffected()
 	if err != nil {
 		u.logger.Errorf("Error while getting number affected rows:%s", err)
-		return fmt.Errorf("DeleteUser: error while getting number affected rows:%s", err)
+		return fmt.Errorf("deleteUser: error while getting number affected rows:%s", err)
 	}
 	if numberRows == 0 {
-		u.logger.Errorf("User with such Id does not exist", err)
-		return fmt.Errorf("user with such Id does not exist")
+		u.logger.Errorf("DeleteUser:object with this id does not exist")
+		return errors.Wrap(MyErrors.DoesNotExist, "deleteUser")
 	}
 	return nil
 }

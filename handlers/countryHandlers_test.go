@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"net/http/httptest"
 	"testing"
+	"tranee_service/MyErrors"
 	"tranee_service/internal/logging"
 	"tranee_service/models"
 	"tranee_service/services"
@@ -97,7 +98,7 @@ func TestHandler_getAllCountries(t *testing.T) {
 			inputFilter:         &models.Filters{},
 			mockBehavior:        func(s *mockservice.MockAppCountries, filter *models.Filters) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:                "Invalid query2",
@@ -105,7 +106,7 @@ func TestHandler_getAllCountries(t *testing.T) {
 			inputFilter:         &models.Filters{},
 			mockBehavior:        func(s *mockservice.MockAppCountries, filter *models.Filters) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url request\n",
+			expectedRequestBody: "invalid url request\n",
 		},
 		{
 			name:        "Server error",
@@ -121,7 +122,6 @@ func TestHandler_getAllCountries(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppCountries(c)
@@ -130,18 +130,14 @@ func TestHandler_getAllCountries(t *testing.T) {
 			serv := &services.Service{AppCountries: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("GET", fmt.Sprintf("/countries%s", testCase.pathQuery), nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 			assert.Equal(t, testCase.expectedRequestBody, w.Body.String())
 		})
@@ -185,17 +181,17 @@ func TestHandler_getOneCountry(t *testing.T) {
 			inputId:             "",
 			mockBehavior:        func(s *mockservice.MockAppCountries, inputId string) {},
 			expectedStatusCode:  400,
-			expectedRequestBody: "Invalid url parameter\n",
+			expectedRequestBody: "invalid url parameter\n",
 		},
 		{
 			name:    "Such a news does not exist",
 			pathId:  "tt",
 			inputId: "TT",
 			mockBehavior: func(s *mockservice.MockAppCountries, inputId string) {
-				s.EXPECT().GetOneCountry(inputId).Return(nil, errors.New("such a country does not exist"))
+				s.EXPECT().GetOneCountry(inputId).Return(nil, MyErrors.DoesNotExist)
 			},
 			expectedStatusCode:  404,
-			expectedRequestBody: "such country does not exist\n",
+			expectedRequestBody: "object with this id does not exist\n",
 		},
 		{
 			name:    "Server error",
@@ -211,7 +207,6 @@ func TestHandler_getOneCountry(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppCountries(c)
@@ -220,18 +215,14 @@ func TestHandler_getOneCountry(t *testing.T) {
 			serv := &services.Service{AppCountries: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("GET", fmt.Sprintf("/countries/%s", testCase.pathId), nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 			assert.Equal(t, testCase.expectedRequestBody, w.Body.String())
 		})
@@ -295,7 +286,6 @@ func TestHandler_createCountry(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppCountries(c)
@@ -304,18 +294,14 @@ func TestHandler_createCountry(t *testing.T) {
 			serv := &services.Service{AppCountries: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("POST", "/countries", bytes.NewBufferString(testCase.inputBody))
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 		})
 	}
@@ -395,7 +381,6 @@ func TestHandler_changeCountry(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppCountries(c)
@@ -404,18 +389,14 @@ func TestHandler_changeCountry(t *testing.T) {
 			serv := &services.Service{AppCountries: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("PUT", fmt.Sprintf("/countries/%s", testCase.pathId), bytes.NewBufferString(testCase.inputBody))
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 		})
 	}
@@ -452,7 +433,7 @@ func TestHandler_deleteCountry(t *testing.T) {
 			pathId:  "tt",
 			inputId: "TT",
 			mockBehavior: func(s *mockservice.MockAppCountries, inputId string) {
-				s.EXPECT().DeleteCountry(inputId).Return(errors.New("country with such Id does not exist"))
+				s.EXPECT().DeleteCountry(inputId).Return(MyErrors.DoesNotExist)
 			},
 			expectedStatusCode: 404,
 		},
@@ -469,7 +450,6 @@ func TestHandler_deleteCountry(t *testing.T) {
 
 	for _, testCase := range testTable {
 		t.Run(testCase.name, func(t *testing.T) {
-			//Init dependencies
 			c := gomock.NewController(t)
 			defer c.Finish()
 			appService := mockservice.NewMockAppCountries(c)
@@ -478,18 +458,14 @@ func TestHandler_deleteCountry(t *testing.T) {
 			serv := &services.Service{AppCountries: appService}
 			handler := NewHandler(serv, logger)
 
-			//Init server
 			r := handler.InitRoutes()
 
-			//Test request
 			w := httptest.NewRecorder()
 
 			req := httptest.NewRequest("DELETE", fmt.Sprintf("/countries/%s", testCase.pathId), nil)
 
-			//Execute the request
 			r.ServeHTTP(w, req)
 
-			//Assert
 			assert.Equal(t, testCase.expectedStatusCode, w.Code)
 		})
 	}
