@@ -69,10 +69,6 @@ func main() {
 	go func() {
 		if err := serv.Run(host, port, handler.InitRoutes()); err != nil {
 			logger.Panicf("Error occured while running http server: %s", err.Error())
-			select {
-			case <-done:
-				return
-			}
 		}
 	}()
 
@@ -84,10 +80,13 @@ func main() {
 			select {
 			case <-ticker.C:
 				ser.AppCountries.LoadImages()
+			case <-done:
+				return
 			}
 		}
 	}()
 	<-quit
 	ticker.Stop()
+
 	done <- true
 }
