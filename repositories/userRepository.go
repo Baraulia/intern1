@@ -29,7 +29,16 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 		return 0, fmt.Errorf("createUser: can not starts transaction:%w", err)
 	}
 	defer transaction.Rollback()
-
+	hobbiesId, err := CheckUserData(transaction, user)
+	if err != nil {
+		u.logger.Errorf("CreateUser: error while checking user data:%s", err)
+		return 0, fmt.Errorf("createUser: error while checking user data:%w", err)
+	}
+	if len(hobbiesId) == 0 {
+		u.logger.Errorf("CreateUser: there are no correct hobbies for the user")
+		return 0, fmt.Errorf("createUser: there are no correct hobbies for the user")
+	}
+	user.Hobbies = hobbiesId
 	query := "INSERT INTO users (name, email, description, country_id) values (?, ?, ?, ?)"
 	result, err := transaction.Exec(query, user.Name, user.Email, user.Description, user.CountryId)
 	if err != nil {
@@ -42,6 +51,7 @@ func (u *UserRepository) CreateUser(user *models.User) (int, error) {
 		return 0, fmt.Errorf("createUser: error while getting insertId:%w", err)
 	}
 	userId = int(id)
+
 	query = "INSERT INTO users_hobbies (user_id, hobby_id) values "
 	var values []interface{}
 	for _, s := range user.Hobbies {
@@ -152,6 +162,17 @@ func (u *UserRepository) ChangeUser(user *models.User, userId int) error {
 	}
 	defer transaction.Rollback()
 
+	hobbiesId, err := CheckUserData(transaction, user)
+	if err != nil {
+		u.logger.Errorf("ChangeUser: error while checking user data:%s", err)
+		return fmt.Errorf("сhangeUser: error while checking user data:%w", err)
+	}
+	if len(hobbiesId) == 0 {
+		u.logger.Errorf("ChangeUser: there are no correct hobbies for the user")
+		return fmt.Errorf("сhangeUser: there are no correct hobbies for the user")
+	}
+	user.Hobbies = hobbiesId
+
 	query := "UPDATE users SET name = ?, email = ?, description = ?, country_id = ? WHERE id = ?"
 	result, err := transaction.Exec(query, user.Name, user.Email, user.Description, user.CountryId, userId)
 	if err != nil {
@@ -207,4 +228,40 @@ func (u *UserRepository) DeleteUser(userId int) error {
 		return errors.Wrap(MyErrors.DoesNotExist, "deleteUser")
 	}
 	return nil
+}
+
+func CheckUserData(tr *sql.Tx, user *models.User) ([]int, error) {
+	var exist bool
+	var hobbiesId []int
+	var userHobbies []int
+	query := "SELECT EXISTS (SELECT 1 FROM countries WHERE id = ?)"
+	row := tr.QueryRow(query, user.CountryId)
+	if err := row.Scan(&exist); err != nil {
+		return nil, err
+	}
+	if !exist {
+		return nil, MyErrors.DoesNotExist
+	}
+	query = "SELECT id FROM hobbies"
+	rows, err := tr.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("checkUserData: can not executes a query:%s", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("checkUserData:repository error:%w", err)
+		}
+		hobbiesId = append(hobbiesId, id)
+	}
+
+	for _, id := range user.Hobbies {
+		for _, hobby := range hobbiesId {
+			if hobby == id {
+				userHobbies = append(userHobbies, id)
+			}
+		}
+	}
+	return userHobbies, nil
 }
